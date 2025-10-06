@@ -23,6 +23,7 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   calendar: "calendar-today",
   "calendar.badge.clock": "schedule",
+  house: "home",
 } as IconMapping;
 
 /**

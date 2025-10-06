@@ -1,11 +1,30 @@
-import { Button, Linking, Platform, StyleSheet, View } from "react-native";
+import {
+  Linking,
+  Platform,
+  StyleSheet,
+  View,
+  GestureResponderEvent,
+  Image,
+} from "react-native";
 
-import { HelloWave } from "@/components/hello-wave";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Link } from "expo-router";
-import { LinkButton } from "../../components/LinkButton";
+
+import { Pressable, Text } from "react-native";
+
+type LinkButtonProps = {
+  title: string;
+  onPress: (event: GestureResponderEvent) => void;
+};
+
+function LinkButton({ title, onPress }: LinkButtonProps) {
+  return (
+    <Pressable style={styles.button} onPress={onPress}>
+      <Text style={styles.text}>{title}</Text>
+    </Pressable>
+  );
+}
 
 export default function HomeScreen() {
   type Links = Record<string, string>;
@@ -48,85 +67,91 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "#51AFEF", dark: "#1D3D47" }}
-      // headerImage={
-      //   <Image
-      //     source={require("@/assets/images/partial-react-logo.png")}
-      //     style={styles.reactLogo}
-      //   />
-      // }
+      headerBackgroundColor={{ light: "#14694f", dark: "#14694f" }}
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      headerImage={
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Image
+            source={require("@/assets/images/ca-logo.png")}
+            style={{ width: 150, height: 150, resizeMode: "contain" }}
+          />
+        </View>
+      }
     >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Student Resources</ThemedText>
+        <ThemedText type="title">CA Student Resources</ThemedText>
       </ThemedView>
       <View style={styles.buttonGrid}>
         {Object.entries(links).map(([title, url]) => (
           <View key={title} style={styles.buttonWrapper}>
-            <Button title={title} onPress={() => Linking.openURL(url)} />
+            <LinkButton title={title} onPress={() => Linking.openURL(url)} />
           </View>
         ))}
       </View>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
+      {/* <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle">Step 1: Try it</ThemedText>
+          <ThemedText>
           Edit{" "}
           <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
           to see changes. Press{" "}
           <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
+          {Platform.select({
+          ios: "cmd + d",
+          android: "cmd + m",
+          web: "F12",
+          })}
           </ThemedText>{" "}
           to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+          </ThemedText>
+          </ThemedView> */}
+      {/* <ThemedView style={styles.stepContainer}> */}
+      {/*   <Link href="/modal"> */}
+      {/*     <Link.Trigger> */}
+      {/*       <ThemedText type="subtitle">Step 2: Explore</ThemedText> */}
+      {/*     </Link.Trigger> */}
+      {/*     <Link.Preview /> */}
+      {/*     <Link.Menu> */}
+      {/*       <Link.MenuAction */}
+      {/*         title="Action" */}
+      {/*         icon="cube" */}
+      {/*         onPress={() => alert("Action pressed")} */}
+      {/*       /> */}
+      {/*       <Link.MenuAction */}
+      {/*         title="Share" */}
+      {/*         icon="square.and.arrow.up" */}
+      {/*         onPress={() => alert("Share pressed")} */}
+      {/*       /> */}
+      {/*       <Link.Menu title="More" icon="ellipsis"> */}
+      {/*         <Link.MenuAction */}
+      {/*           title="Delete" */}
+      {/*           icon="trash" */}
+      {/*           destructive */}
+      {/*           onPress={() => alert("Delete pressed")} */}
+      {/*         /> */}
+      {/*       </Link.Menu> */}
+      {/*     </Link.Menu> */}
+      {/*   </Link> */}
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+      {/*   <ThemedText> */}
+      {/*     {`Tap the Explore tab to learn more about what's included in this starter app.`} */}
+      {/*   </ThemedText> */}
+      {/* </ThemedView> */}
+      {/* <ThemedView style={styles.stepContainer}> */}
+      {/*   <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText> */}
+      {/*   <ThemedText> */}
+      {/*     {`When you're ready, run `} */}
+      {/*     <ThemedText type="defaultSemiBold"> */}
+      {/*       npm run reset-project */}
+      {/*     </ThemedText>{" "} */}
+      {/*     to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "} */}
+      {/*     directory. This will move the current{" "} */}
+      {/*     <ThemedText type="defaultSemiBold">app</ThemedText> to{" "} */}
+      {/*     <ThemedText type="defaultSemiBold">app-example</ThemedText>. */}
+      {/*   </ThemedText> */}
+      {/* </ThemedView> */}
     </ParallaxScrollView>
   );
 }
@@ -158,5 +183,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     marginVertical: 16,
+  },
+  button: {
+    backgroundColor: "#14694f",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  text: {
+    color: "white",
+    fontWeight: "bold",
   },
 });

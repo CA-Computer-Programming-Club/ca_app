@@ -22,7 +22,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="calendar" color={color} />
+            <IconSymbol size={28} name="house" color={color} />
           ),
         }}
       />

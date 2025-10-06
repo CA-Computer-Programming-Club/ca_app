@@ -10,6 +10,8 @@ export default function HomeScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#51AFEF", dark: "#1D3D47" }}
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
       // headerImage={
       //   <Image
       //     source={require("@/assets/images/partial-react-logo.png")}
@@ -20,14 +22,6 @@ export default function HomeScreen() {
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Schedule</ThemedText>
       </ThemedView>
-      <Button
-        title="idi"
-        onPress={() => {
-          Linking.openURL(
-            "https://www.google.com/url?q=https%3A%2F%2Fapp.orah.com%2Flogin&sa=D&sntz=1&usg=AOvVaw3-zhvRze0j0Eb4FzainNaI",
-          );
-        }}
-      />
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>

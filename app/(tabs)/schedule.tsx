@@ -1,7 +1,5 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import { Button, Linking, Platform, StyleSheet } from "react-native";
 
-import { HelloWave } from "@/components/hello-wave";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -21,6 +19,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Schedule</ThemedText>
       </ThemedView>
+      <Button title="idi" onPress={() => {Linking.openURL("https://www.google.com/url?q=https%3A%2F%2Fapp.orah.com%2Flogin&sa=D&sntz=1&usg=AOvVaw3-zhvRze0j0Eb4FzainNaI")}}/>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>

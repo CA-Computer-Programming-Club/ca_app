@@ -1,49 +1,107 @@
-import { Button, StyleSheet, View } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Platform,
+  ActionSheetIOS,
+  TouchableOpacity,
+} from "react-native";
+import { useState } from "react";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Menu, MenuOption, MenuOptions, MenuProvider, MenuTrigger } from 'react-native-popup-menu';
+import {
+  Menu,
+  MenuOption,
+  MenuOptions,
+  MenuProvider,
+  MenuTrigger,
+} from "react-native-popup-menu";
 
 export default function TabTwoScreen() {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const showActionSheet = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Cancel", "Save", "Delete"],
+        cancelButtonIndex: 0,
+        destructiveButtonIndex: 2,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 1) {
+          alert("Save");
+        } else if (buttonIndex === 2) {
+          alert("Delete");
+        }
+      },
+    );
+  };
+
+  const handleMenuTrigger = () => {
+    if (Platform.OS === "ios") {
+      showActionSheet();
+    } else {
+      setShowMenu(true);
+    }
+  };
+
+  // Custom Plus Button Component
+  const PlusButton = ({ onPress }) => (
+    <TouchableOpacity style={styles.circularButton} onPress={onPress}>
+      <ThemedText style={styles.plusSign}>+</ThemedText>
+    </TouchableOpacity>
+  );
+
   return (
-    <MenuProvider>
-      <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        /* headerImage={ */
-        /*   <IconSymbol */
-        /*     size={310} */
-        /*     color="#808080" */
-        /*     name="chevron.left.forwardslash.chevron.right" */
-        /*     style={styles.headerImage} */
-        /*   /> */
-        /* } */
       >
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Lost and Found</ThemedText>
         </ThemedView>
-        <ThemedText>
-          Lost and Found items will be listed here
-        </ThemedText>
+        <ThemedText>Lost and Found items will be listed here</ThemedText>
       </ParallaxScrollView>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Menu>
-          <MenuTrigger>
-            <Button title="Open Menu" />
-          </MenuTrigger>
 
-          <MenuOptions>
-            <MenuOption onSelect={() => alert('Option 1 selected')} text="Option 1" />
-            <MenuOption onSelect={() => alert('Option 2 selected')} text="Option 2" />
-            <MenuOption onSelect={() => alert('Option 3 selected')} text="Option 3" />
-          </MenuOptions>
-        </Menu>
-      </View>
-      </View>
-      </MenuProvider>
+      {Platform.OS === "ios" ? (
+        // iOS - Use custom PlusButton to trigger ActionSheet
+        <View style={styles.floatingButtonContainer}>
+          <PlusButton onPress={handleMenuTrigger} />
+        </View>
+      ) : (
+        <View style={styles.floatingButtonContainer}>
+          <Menu opened={showMenu} onBackdropPress={() => setShowMenu(false)}>
+            <MenuTrigger
+              onPress={handleMenuTrigger}
+              customStyles={{
+                triggerWrapper: styles.circularButton, // use your button style
+                triggerText: styles.plusSign,
+              }}
+              text="+"
+            />
+            <MenuOptions>
+              <MenuOption
+                onSelect={() => {
+                  alert("Save");
+                  setShowMenu(false);
+                }}
+                text="Save"
+              />
+              <MenuOption
+                onSelect={() => {
+                  alert("Delete");
+                  setShowMenu(false);
+                }}
+                text="Delete"
+              />
+            </MenuOptions>
+          </Menu>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -58,21 +116,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
-  button: {
-    backgroundColor: "#14694f",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  floatingButton: {
+  floatingButtonContainer: {
     position: "absolute",
     bottom: 20,
     right: 20,
-    backgroundColor: "purple",
+  },
+  circularButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
+    backgroundColor: "purple",
     alignItems: "center",
     justifyContent: "center",
     elevation: 5, // Android shadow
@@ -81,36 +134,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
-  floatingRectButton: {
-    position: "absolute",
-    bottom: 100,
-    right: 20,
-    backgroundColor: "gray",
-    width: 250,
-    height: 60,
-    borderRadius: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 5, // Android shadow
-    shadowColor: "#000", // iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  floatingButtonText: {
+  plusSign: {
     color: "white",
-    fontSize: 36,
+    fontSize: 24,
     fontWeight: "bold",
-    lineHeight: 36,
+    lineHeight: 24,
     textAlign: "center",
     includeFontPadding: false,
   },
-  floatingSquareButtonText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-    lineHeight: 36,
-    textAlign: "center",
-    includeFontPadding: false,
+  triggerWrapper: {
+    // Hide the default trigger
+    width: 0,
+    height: 0,
+    opacity: 0,
   },
 });

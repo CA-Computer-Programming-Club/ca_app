@@ -28,6 +28,16 @@ export default function TabTwoScreen() {
         </ThemedText>
       </ParallaxScrollView>
       <Pressable
+        style={{...styles.floatingRectButton,bottom:180}}
+      >
+        <Text style={styles.floatingSquareButtonText}>Lost my shit</Text>
+      </Pressable>
+      <Pressable
+        style={styles.floatingRectButton}
+      >
+        <Text style={styles.floatingSquareButtonText}>Found someone's shit</Text>
+      </Pressable>
+      <Pressable
         style={styles.floatingButton}
         onPress={() => 
           Alert.alert(
@@ -84,9 +94,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+  floatingRectButton: {
+    position: "absolute",
+    bottom: 100,
+    right: 20,
+    backgroundColor: "gray",
+    width: 250,
+    height: 60,
+    borderRadius: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5, // Android shadow
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
   floatingButtonText: {
     color: "white",
     fontSize: 36,
+    fontWeight: "bold",
+  },
+  floatingSquareButtonText: {
+    color: "white",
+    fontSize: 20,
     fontWeight: "bold",
   },
 });

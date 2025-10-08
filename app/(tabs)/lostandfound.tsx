@@ -1,12 +1,14 @@
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Button, StyleSheet, View } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Menu, MenuOption, MenuOptions, MenuProvider, MenuTrigger } from 'react-native-popup-menu';
 
 export default function TabTwoScreen() {
   return (
-    <>
+    <MenuProvider>
+      <View style={{ flex: 1 }}>
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
         showsVerticalScrollIndicator={false}
@@ -23,38 +25,25 @@ export default function TabTwoScreen() {
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Lost and Found</ThemedText>
         </ThemedView>
-        <ThemedText type="text" style={styles.text}>
+        <ThemedText>
           Lost and Found items will be listed here
         </ThemedText>
       </ParallaxScrollView>
-      <Pressable style={{ ...styles.floatingRectButton, bottom: 180 }}>
-        <Text style={styles.floatingSquareButtonText}>Lost my shit</Text>
-      </Pressable>
-      <Pressable style={styles.floatingRectButton}>
-        <Text style={styles.floatingSquareButtonText}>
-          Found someone's shit
-        </Text>
-      </Pressable>
-      <Pressable
-        style={styles.floatingButton}
-        onPress={() =>
-          Alert.alert(
-            "Alert Title",
-            "My Alert Msg",
-            [
-              {
-                text: "Cancel",
-                style: "cancel",
-              },
-              { text: "OK", onPress: () => console.log("OK Pressed") },
-            ],
-            { cancelable: true },
-          )
-        }
-      >
-        <Text style={styles.floatingButtonText}>+</Text>
-      </Pressable>
-    </>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Menu>
+          <MenuTrigger>
+            <Button title="Open Menu" />
+          </MenuTrigger>
+
+          <MenuOptions>
+            <MenuOption onSelect={() => alert('Option 1 selected')} text="Option 1" />
+            <MenuOption onSelect={() => alert('Option 2 selected')} text="Option 2" />
+            <MenuOption onSelect={() => alert('Option 3 selected')} text="Option 3" />
+          </MenuOptions>
+        </Menu>
+      </View>
+      </View>
+      </MenuProvider>
   );
 }
 

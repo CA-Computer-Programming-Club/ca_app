@@ -27,19 +27,17 @@ export default function TabTwoScreen() {
           Lost and Found items will be listed here
         </ThemedText>
       </ParallaxScrollView>
-      <Pressable
-        style={{...styles.floatingRectButton,bottom:180}}
-      >
+      <Pressable style={{ ...styles.floatingRectButton, bottom: 180 }}>
         <Text style={styles.floatingSquareButtonText}>Lost my shit</Text>
       </Pressable>
-      <Pressable
-        style={styles.floatingRectButton}
-      >
-        <Text style={styles.floatingSquareButtonText}>Found someone's shit</Text>
+      <Pressable style={styles.floatingRectButton}>
+        <Text style={styles.floatingSquareButtonText}>
+          Found someone's shit
+        </Text>
       </Pressable>
       <Pressable
         style={styles.floatingButton}
-        onPress={() => 
+        onPress={() =>
           Alert.alert(
             "Alert Title",
             "My Alert Msg",
@@ -114,10 +112,16 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 36,
     fontWeight: "bold",
+    lineHeight: 36,
+    textAlign: "center",
+    includeFontPadding: false,
   },
   floatingSquareButtonText: {
     color: "white",
     fontSize: 20,
     fontWeight: "bold",
+    lineHeight: 36,
+    textAlign: "center",
+    includeFontPadding: false,
   },
 });

@@ -1,11 +1,11 @@
-import {
-  StyleSheet,
-  View,
-  Platform,
-  ActionSheetIOS,
-  TouchableOpacity,
-} from "react-native";
 import { useState } from "react";
+import {
+  ActionSheetIOS,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
@@ -14,8 +14,7 @@ import {
   Menu,
   MenuOption,
   MenuOptions,
-  MenuProvider,
-  MenuTrigger,
+  MenuTrigger
 } from "react-native-popup-menu";
 
 export default function TabTwoScreen() {
@@ -24,15 +23,15 @@ export default function TabTwoScreen() {
   const showActionSheet = () => {
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: ["Cancel", "Save", "Delete"],
+        options: ["Cancel", "Lost", "Found"],
         cancelButtonIndex: 0,
         destructiveButtonIndex: 2,
       },
       (buttonIndex) => {
         if (buttonIndex === 1) {
-          alert("Save");
+          alert("Lost");
         } else if (buttonIndex === 2) {
-          alert("Delete");
+          alert("Found");
         }
       },
     );
@@ -85,17 +84,17 @@ export default function TabTwoScreen() {
             <MenuOptions>
               <MenuOption
                 onSelect={() => {
-                  alert("Save");
+                  alert("Lost");
                   setShowMenu(false);
                 }}
-                text="Save"
+                text="Lost"
               />
               <MenuOption
                 onSelect={() => {
-                  alert("Delete");
+                  alert("Found");
                   setShowMenu(false);
                 }}
-                text="Delete"
+                text="Found"
               />
             </MenuOptions>
           </Menu>

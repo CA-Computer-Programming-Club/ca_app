@@ -10,7 +10,7 @@ export default function TabTwoScreen() {
     <MenuProvider>
       <View style={{ flex: 1 }}>
       <ParallaxScrollView
-        headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
+        headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         /* headerImage={ */

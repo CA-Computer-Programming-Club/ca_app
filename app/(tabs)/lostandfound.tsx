@@ -6,46 +6,47 @@ import { ThemedView } from "@/components/themed-view";
 
 export default function TabTwoScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
-      showsVerticalScrollIndicator={false}
-      showsHorizontalScrollIndicator={false}
-      /* headerImage={ */
-      /*   <IconSymbol */
-      /*     size={310} */
-      /*     color="#808080" */
-      /*     name="chevron.left.forwardslash.chevron.right" */
-      /*     style={styles.headerImage} */
-      /*   /> */
-      /* } */
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Lost and Found</ThemedText>
-      </ThemedView>
-      <Pressable
-        style={{ backgroundColor: "purple" }}
-        onPress={Alert.alert(
-          "Alert Title",
-          "My Alert Msg",
-          [
-            {
-              text: "Cancel",
-              onPress: () => Alert.alert("Cancel Pressed"),
-              style: "cancel",
-            },
-          ],
-          {
-            cancelable: true,
-            onDismiss: () =>
-              Alert.alert(
-                "This alert was dismissed by tapping outside of the alert dialog.",
-              ),
-          },
-        )}
+    <>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        /* headerImage={ */
+        /*   <IconSymbol */
+        /*     size={310} */
+        /*     color="#808080" */
+        /*     name="chevron.left.forwardslash.chevron.right" */
+        /*     style={styles.headerImage} */
+        /*   /> */
+        /* } */
       >
-        <Text>+</Text>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Lost and Found</ThemedText>
+        </ThemedView>
+        <ThemedText type="text" style={styles.text}>
+          Lost and Found items will be listed here
+        </ThemedText>
+      </ParallaxScrollView>
+      <Pressable
+        style={styles.floatingButton}
+        onPress={() => 
+          Alert.alert(
+            "Alert Title",
+            "My Alert Msg",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+              },
+              { text: "OK", onPress: () => console.log("OK Pressed") },
+            ],
+            { cancelable: true },
+          )
+        }
+      >
+        <Text style={styles.floatingButtonText}>+</Text>
       </Pressable>
-    </ParallaxScrollView>
+    </>
   );
 }
 
@@ -66,5 +67,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 5,
     alignItems: "center",
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "purple",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5, // Android shadow
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  floatingButtonText: {
+    color: "white",
+    fontSize: 36,
+    fontWeight: "bold",
   },
 });

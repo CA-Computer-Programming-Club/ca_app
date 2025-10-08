@@ -1,10 +1,9 @@
 import {
-  Linking,
-  Platform,
-  StyleSheet,
-  View,
   GestureResponderEvent,
   Image,
+  Linking,
+  StyleSheet,
+  View
 } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -156,7 +155,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",

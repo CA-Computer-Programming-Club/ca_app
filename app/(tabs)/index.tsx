@@ -66,7 +66,7 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "#14694f", dark: "#14694f" }}
+      headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
       headerImage={
@@ -184,7 +184,7 @@ export const styles = StyleSheet.create({
     marginVertical: 16,
   },
   button: {
-    backgroundColor: "#14694f",
+    backgroundColor: "#13694E",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,

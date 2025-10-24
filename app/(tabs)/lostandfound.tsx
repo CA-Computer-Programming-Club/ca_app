@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ActionSheetIOS,
   Platform,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -14,24 +15,55 @@ import {
   Menu,
   MenuOption,
   MenuOptions,
-  MenuTrigger
+  MenuTrigger,
 } from "react-native-popup-menu";
 
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
 
+  const dummyData = [
+    {
+      id: 1,
+      type: "lost",
+      title: "Black Wallet",
+      location: "Cafeteria",
+      description: "Contains ID and a few cards. Lost around 1 PM on Tuesday.",
+    },
+    {
+      id: 2,
+      type: "found",
+      title: "Set of Keys",
+      location: "Library",
+      description: "Found near the computer section. Has a blue keychain.",
+    },
+    {
+      id: 3,
+      type: "lost",
+      title: "Gray Hoodie",
+      location: "Gym",
+      description: "Plain grey with a Nike logo. Might’ve been left after PE.",
+    },
+    {
+      id: 4,
+      type: "found",
+      title: "Water Bottle",
+      location: "Main Hallway",
+      description: "Metal bottle with stickers. Picked up yesterday evening.",
+    },
+  ];
+
   const showActionSheet = () => {
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: ["Cancel", "Lost", "Found"],
-        cancelButtonIndex: 0,
-        destructiveButtonIndex: 2,
+        options: ["Lost Item", "Found Item"],
+        // cancelButtonIndex: 0,
+        // destructiveButtonIndex: 0,
       },
       (buttonIndex) => {
-        if (buttonIndex === 1) {
-          alert("Lost");
-        } else if (buttonIndex === 2) {
-          alert("Found");
+        if (buttonIndex === 0) {
+          alert("Lost Item");
+        } else if (buttonIndex === 1) {
+          alert("Found Item");
         }
       },
     );
@@ -52,6 +84,30 @@ export default function TabTwoScreen() {
     </TouchableOpacity>
   );
 
+  const renderPost = (item) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.postContainer}
+      onPress={() => navigation.navigate("PostDetail", { item })}
+    >
+      <ThemedText style={styles.postTitle}>{item.title}</ThemedText>
+      <ThemedText
+        style={[
+          styles.postType,
+          { color: item.type === "lost" ? "#c0392b" : "#27ae60" },
+        ]}
+      >
+        {item.type.toUpperCase()}
+      </ThemedText>
+      <ThemedText style={styles.postLocation}>
+        {item.type === "lost"
+          ? "Last Seen: 📍 " + item.location
+          : "📍 " + item.location}
+      </ThemedText>
+      <ThemedText style={styles.postDescription}>{item.description}</ThemedText>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={{ flex: 1 }}>
       <ParallaxScrollView
@@ -63,6 +119,9 @@ export default function TabTwoScreen() {
           <ThemedText type="title">Lost and Found</ThemedText>
         </ThemedView>
         <ThemedText>Lost and Found items will be listed here</ThemedText>
+        <ScrollView contentContainerStyle={styles.postsWrapper}>
+          {dummyData.map((item) => renderPost(item))}
+        </ScrollView>
       </ParallaxScrollView>
 
       {Platform.OS === "ios" ? (
@@ -84,17 +143,17 @@ export default function TabTwoScreen() {
             <MenuOptions>
               <MenuOption
                 onSelect={() => {
-                  alert("Lost");
+                  alert("Lost Item");
                   setShowMenu(false);
                 }}
-                text="Lost"
+                text="Lost Item"
               />
               <MenuOption
                 onSelect={() => {
-                  alert("Found");
+                  alert("Found Item");
                   setShowMenu(false);
                 }}
-                text="Found"
+                text="Found Item"
               />
             </MenuOptions>
           </Menu>
@@ -146,5 +205,41 @@ const styles = StyleSheet.create({
     width: 0,
     height: 0,
     opacity: 0,
+  },
+  postsWrapper: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 4,
+  },
+  postContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    // marginHorizontal: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  postType: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  postLocation: {
+    fontSize: 13,
+    marginTop: 4,
+    color: "#555",
+  },
+  postDescription: {
+    fontSize: 13,
+    marginTop: 6,
+    color: "#333",
   },
 });

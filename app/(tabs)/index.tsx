@@ -3,7 +3,7 @@ import {
   Image,
   Linking,
   StyleSheet,
-  View
+  View,
 } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";

@@ -85,27 +85,44 @@ export default function TabTwoScreen() {
   );
 
   const renderPost = (item) => (
-    <TouchableOpacity
+    <ThemedView
       key={item.id}
       style={styles.postContainer}
-      onPress={() => navigation.navigate("PostDetail", { item })}
+      lightColor="#fff"
+      darkColor="#2c2c2e"
     >
-      <ThemedText style={styles.postTitle}>{item.title}</ThemedText>
-      <ThemedText
-        style={[
-          styles.postType,
-          { color: item.type === "lost" ? "#c0392b" : "#27ae60" },
-        ]}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("PostDetail", { item })}
       >
-        {item.type.toUpperCase()}
-      </ThemedText>
-      <ThemedText style={styles.postLocation}>
-        {item.type === "lost"
-          ? "Last Seen: 📍 " + item.location
-          : "📍 " + item.location}
-      </ThemedText>
-      <ThemedText style={styles.postDescription}>{item.description}</ThemedText>
-    </TouchableOpacity>
+        <ThemedText style={styles.postTitle}>{item.title}</ThemedText>
+        <ThemedText
+          style={[
+            styles.postType,
+            // { color: item.type === "lost" ? "#c0392b" : "#27ae60" },
+          ]}
+          lightColor={item.type === "lost" ? "#c0392b" : "#27ae60"}
+          darkColor={item.type === "lost" ? "#e94f3f" : "#27ae60"}
+        >
+          {item.type.toUpperCase()}
+        </ThemedText>
+        <ThemedText
+          style={styles.postLocation}
+          lightColor="#555"
+          darkColor="#aaa"
+        >
+          {item.type === "lost"
+            ? "Last Seen: 📍 " + item.location
+            : "📍 " + item.location}
+        </ThemedText>
+        <ThemedText
+          style={styles.postDescription}
+          lightColor="#333"
+          darkColor="#ddd"
+        >
+          {item.description}
+        </ThemedText>
+      </TouchableOpacity>
+    </ThemedView>
   );
 
   return (
@@ -212,7 +229,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   postContainer: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -221,6 +238,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
     elevation: 3,
   },
   postTitle: {
@@ -235,11 +254,11 @@ const styles = StyleSheet.create({
   postLocation: {
     fontSize: 13,
     marginTop: 4,
-    color: "#555",
+    // color: "#555",
   },
   postDescription: {
     fontSize: 13,
     marginTop: 6,
-    color: "#333",
+    // color: "#333",
   },
 });

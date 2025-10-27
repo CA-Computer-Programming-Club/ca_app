@@ -1,12 +1,11 @@
 import { useState } from "react";
 import {
-  ActionSheetIOS,
-  Platform,
+  ActionSheetIOS, Image, Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View
+} from 'react-native';
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
@@ -18,6 +17,13 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 
+const imageMap: Record<string, any> = {
+  'black_wallet.jpg': require('../../assets/images/black_wallet.jpg'),
+  'keys.jpg': require('../../assets/images/keys.jpg'),
+  'black_hoodie.jpg': require('../../assets/images/black_hoodie.jpg'),
+  'water_bottle.jpg': require('../../assets/images/water_bottle.jpg'),
+};
+
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -28,6 +34,7 @@ export default function TabTwoScreen() {
       title: "Black Wallet",
       location: "Cafeteria",
       description: "Contains ID and a few cards. Lost around 1 PM on Tuesday.",
+      image: "black_wallet.jpg",
     },
     {
       id: 2,
@@ -35,13 +42,15 @@ export default function TabTwoScreen() {
       title: "Set of Keys",
       location: "Library",
       description: "Found near the computer section. Has a blue keychain.",
+      image: 'keys.jpg',
     },
     {
       id: 3,
       type: "lost",
-      title: "Gray Hoodie",
+      title: "Black Hoodie",
       location: "Gym",
-      description: "Plain grey with a Nike logo. Might’ve been left after PE.",
+      description: "Plain black without a Nike logo. Might’ve been left after PE.",
+      image: 'black_hoodie.jpg',
     },
     {
       id: 4,
@@ -49,6 +58,7 @@ export default function TabTwoScreen() {
       title: "Water Bottle",
       location: "Main Hallway",
       description: "Metal bottle with stickers. Picked up yesterday evening.",
+      image: 'water_bottle.jpg',
     },
   ];
 
@@ -84,7 +94,7 @@ export default function TabTwoScreen() {
     </TouchableOpacity>
   );
 
-  const renderPost = (item) => (
+  const renderPost = (item: { id: any; type: any; title: any; location: any; description: any; image: any; }) => (
     <TouchableOpacity
       key={item.id}
       style={styles.postContainer}
@@ -105,6 +115,7 @@ export default function TabTwoScreen() {
           : "📍 " + item.location}
       </ThemedText>
       <ThemedText style={styles.postDescription}>{item.description}</ThemedText>
+      <Image source={imageMap[item.image]} style={{ width: 100, height: 100, backgroundColor: 'lightgray' }} />
     </TouchableOpacity>
   );
 

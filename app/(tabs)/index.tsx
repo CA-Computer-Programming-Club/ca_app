@@ -173,15 +173,14 @@ export const styles = StyleSheet.create({
     position: "absolute",
   },
   buttonWrapper: {
-    flexGrow: 1,
-    flexBasis: 250, // minimum width
-    marginBottom: 8,
-    marginRight: 8, // spacing between buttons in the row
+    flex: 1,
+    minWidth: 250,
+    margin: 4,
   },
   buttonGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginVertical: 16,
+    marginHorizontal: -4,
   },
   button: {
     backgroundColor: "#13694E",

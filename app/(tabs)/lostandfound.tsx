@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useNavigation } from "expo-router";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
@@ -19,6 +20,8 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 
+import dummyData from "@/data/dummy-data.json";
+
 const imageMap: Record<string, any> = {
   "black_wallet.jpg": require("@/assets/images/black_wallet.jpg"),
   "keys.jpg": require("@/assets/images/keys.jpg"),
@@ -28,42 +31,7 @@ const imageMap: Record<string, any> = {
 
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
-
-  const dummyData = [
-    {
-      id: 1,
-      type: "lost",
-      title: "Black Wallet",
-      location: "Cafeteria",
-      description: "Contains ID and a few cards. Lost around 1 PM on Tuesday.",
-      image: "black_wallet.jpg",
-    },
-    {
-      id: 2,
-      type: "found",
-      title: "Set of Keys",
-      location: "Library",
-      description: "Found near the computer section. Has a blue keychain.",
-      image: "keys.jpg",
-    },
-    {
-      id: 3,
-      type: "lost",
-      title: "Black Hoodie",
-      location: "Gym",
-      description:
-        "Plain black without a Nike logo. Might’ve been left after PE.",
-      image: "black_hoodie.jpg",
-    },
-    {
-      id: 4,
-      type: "found",
-      title: "Water Bottle",
-      location: "Main Hallway",
-      description: "Metal bottle with stickers. Picked up yesterday evening.",
-      image: "water_bottle.jpg",
-    },
-  ];
+  const navigation = useNavigation();
 
   const showActionSheet = () => {
     ActionSheetIOS.showActionSheetWithOptions(
@@ -112,14 +80,15 @@ export default function TabTwoScreen() {
       darkColor="#2c2c2e"
     >
       <TouchableOpacity
-        onPress={() => navigation.navigate("PostDetail", { item })}
+        onPress={() =>
+          navigation.navigate("postdetail", {
+            post: item.id,
+          })
+        }
       >
         <ThemedText style={styles.postTitle}>{item.title}</ThemedText>
         <ThemedText
-          style={[
-            styles.postType,
-            // { color: item.type === "lost" ? "#c0392b" : "#27ae60" },
-          ]}
+          style={styles.postType}
           lightColor={item.type === "lost" ? "#c0392b" : "#27ae60"}
           darkColor={item.type === "lost" ? "#e94f3f" : "#27ae60"}
         >

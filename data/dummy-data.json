@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "type": "lost",
+    "title": "Black Wallet",
+    "location": "Cafeteria",
+    "description": "Contains ID and a few cards. Lost around 1 PM on Tuesday.",
+    "image": "black_wallet.jpg"
+  },
+  {
+    "id": 2,
+    "type": "found",
+    "title": "Set of Keys",
+    "location": "Library",
+    "description": "Found near the computer section. Has a blue keychain.",
+    "image": "keys.jpg"
+  },
+  {
+    "id": 3,
+    "type": "lost",
+    "title": "Black Hoodie",
+    "location": "Gym",
+    "description": "Plain black without a Nike logo. Might've been left after PE.",
+    "image": "black_hoodie.jpg"
+  },
+  {
+    "id": 4,
+    "type": "found",
+    "title": "Water Bottle",
+    "location": "Main Hallway",
+    "description": "Metal bottle with stickers. Picked up yesterday evening.",
+    "image": "water_bottle.jpg"
+  }
+]

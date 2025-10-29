@@ -4,6 +4,7 @@ import {
   Linking,
   StyleSheet,
   View,
+  Platform,
 } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -26,43 +27,141 @@ function LinkButton({ title, onPress }: LinkButtonProps) {
 }
 
 export default function HomeScreen() {
-  type Links = Record<string, string>;
-  const links: Links = {
-    Gmail:
-      "https://www.google.com/url?q=https%3A%2F%2Fconcord.onelogin.com%2Flaunch%2F52278%2F%3Ftab%3Dcm&sa=D&sntz=1&usg=AOvVaw0xImL_wwzpYhaZZZv8naiY",
-    "Google Drive": "https://drive.google.com/a/concordacademy.org",
-    Schoology:
-      "https://www.google.com/url?q=https%3A%2F%2Fconcord.onelogin.com%2Flaunch%2F206009%2F&sa=D&sntz=1&usg=AOvVaw3xfb0_A6661Gedmc81OHRE",
-    Orah: "https://www.google.com/url?q=https%3A%2F%2Fapp.orah.com%2Flogin&sa=D&sntz=1&usg=AOvVaw3-zhvRze0j0Eb4FzainNaI",
-    PowerSchool:
-      "https://www.google.com/url?q=https%3A%2F%2Fconcordacademy.powerschool.com%2F&sa=D&sntz=1&usg=AOvVaw1eNn96ooW_gx54yGb3nfrK",
-    "StuFac Menu":
-      "https://www.google.com/url?q=https%3A%2F%2Fconcordacademydining.sodexomyway.com%2F&sa=D&sntz=1&usg=AOvVaw2wDCPoNUDALLv9TDFX2Er0",
-    "Student Council":
-      "https://www.google.com/url?q=https%3A%2F%2Fsites.google.com%2Fconcordacademy.org%2Fca-all-school-council%2Fhome&sa=D&sntz=1&usg=AOvVaw0Y63nz_C8EdDWXZXDpfE_d",
-    "CA Library":
-      "https://www.google.com/url?q=https%3A%2F%2Fsites.google.com%2Fconcordacademy.org%2Fconcordacademylibrary%2Fhome&sa=D&sntz=1&usg=AOvVaw0RPXntnvlfyM_uJGhMPCPv",
-    "Community + Equity":
-      "https://www.google.com/url?q=https%3A%2F%2Fsites.google.com%2Fconcordacademy.org%2Fcommunity%2Fhome&sa=D&sntz=1&usg=AOvVaw22Ln3gyBAG9kjyapZznBqo",
-    "NameCoach (Fac/Staff)":
-      "https://www.google.com/url?q=https%3A%2F%2Fwww.name-coach.com%2Fevents%2Fca-faculty-and-staff-2025-26%2Freadonly&sa=D&sntz=1&usg=AOvVaw2Z1mRDlYi5HSKXCsAcpf3y",
-    "CA Calendar":
-      "http://www.google.com/url?q=http%3A%2F%2Fcalendar.concordacademy.org%2F%3Fhl%3Den%3Ftab%3Dcc&sa=D&sntz=1&usg=AOvVaw1qgqnnanGR2ayxdrRXp4y6",
-    "Family Portal":
-      "http://www.google.com/url?q=http%3A%2F%2Fconcordacademy.org%2Ffamily-portal&sa=D&sntz=1&usg=AOvVaw1EnEAORw-Pqq6ZyowULajx",
-    Directory:
-      "https://sites.google.com/concordacademy.org/concordacademystudentresources/directory",
-    "Parking Form":
-      "https://docs.google.com/forms/d/e/1FAIpQLSeiAXT8-btu55JU45neDYzesiYkH76ZeSPutZ18xXcvXYDZ4Q/viewform",
-    "NameCoach (Students)":
-      "https://www.google.com/url?q=https%3A%2F%2Fwww.name-coach.com%2Fevents%2Fca-student-community-2025-26%2Freadonly&sa=D&sntz=1&usg=AOvVaw3vdZGgcGbrHrile4AK1lRQ",
-    "MBTA Form":
-      "https://docs.google.com/forms/d/e/1FAIpQLSf-wpBYm-p8EdTg9pCESK2fJeE5CRYuOqSGzwwF1puN6zB-mw/viewform",
-    Printing:
-      "https://sites.google.com/concordacademy.org/concordacademystudentresources/printing",
-    "Student Tech Resources":
-      "https://www.google.com/url?q=https%3A%2F%2Fsites.google.com%2Fconcordacademy.org%2Fconcord-academy-tech-resources%2Fhome&sa=D&sntz=1&usg=AOvVaw3zDyzpknbderjTTfgBD4K1",
+  // Function to handle deep linking with fallback
+  const handleDeepLink = async (appUrl: string, webUrl: string) => {
+    try {
+      // Try to open the app first
+      const supported = await Linking.canOpenURL(appUrl);
+
+      if (supported) {
+        await Linking.openURL(appUrl);
+      } else {
+        // Fallback to web URL
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error("Error opening URL:", error);
+      // Final fallback to web URL
+      await Linking.openURL(webUrl);
+    }
   };
+
+  type LinkConfig = {
+    title: string;
+    appUrl: string;
+    webUrl: string;
+  };
+
+  const links: LinkConfig[] = [
+    {
+      title: "Gmail",
+      appUrl: "googlegmail://",
+      webUrl: "https://concord.onelogin.com/launch/52278/?tab=cm",
+    },
+    {
+      title: "Google Drive",
+      appUrl: "google-drive://",
+      webUrl: "https://drive.google.com/a/concordacademy.org",
+    },
+    {
+      title: "Schoology",
+      appUrl: "schoology://",
+      webUrl: "https://concord.onelogin.com/launch/206009/",
+    },
+    {
+      title: "Orah",
+      appUrl: "orah://",
+      webUrl: "https://app.orah.com/login",
+    },
+    {
+      title: "PowerSchool",
+      appUrl: "powerschool://",
+      webUrl: "https://concordacademy.powerschool.com/",
+    },
+    {
+      title: "StuFac Menu",
+      appUrl: "sodexo://",
+      webUrl: "https://concordacademydining.sodexomyway.com/",
+    },
+    {
+      title: "Student Council",
+      appUrl:
+        "googlechrome://sites.google.com/concordacademy.org/ca-all-school-council/home",
+      webUrl:
+        "https://sites.google.com/concordacademy.org/ca-all-school-council/home",
+    },
+    {
+      title: "CA Library",
+      appUrl:
+        "googlechrome://sites.google.com/concordacademy.org/concordacademylibrary/home",
+      webUrl:
+        "https://sites.google.com/concordacademy.org/concordacademylibrary/home",
+    },
+    {
+      title: "Community + Equity",
+      appUrl:
+        "googlechrome://sites.google.com/concordacademy.org/community/home",
+      webUrl: "https://sites.google.com/concordacademy.org/community/home",
+    },
+    {
+      title: "NameCoach (Fac/Staff)",
+      appUrl: "namecoach://",
+      webUrl:
+        "https://www.name-coach.com/events/ca-faculty-and-staff-2025-26/readonly",
+    },
+    {
+      title: "CA Calendar",
+      appUrl:
+        Platform.OS === "ios"
+          ? "calshow://"
+          : "content://com.android.calendar/time/",
+      webUrl: "http://calendar.concordacademy.org/?hl=en?tab=cc",
+    },
+    {
+      title: "Family Portal",
+      appUrl: "googlechrome://concordacademy.org/family-portal",
+      webUrl: "http://concordacademy.org/family-portal",
+    },
+    {
+      title: "Directory",
+      appUrl:
+        "googlechrome://sites.google.com/concordacademy.org/concordacademystudentresources/directory",
+      webUrl:
+        "https://sites.google.com/concordacademy.org/concordacademystudentresources/directory",
+    },
+    {
+      title: "Parking Form",
+      appUrl: "googledocs://",
+      webUrl:
+        "https://docs.google.com/forms/d/e/1FAIpQLSeiAXT8-btu55JU45neDYzesiYkH76ZeSPutZ18xXcvXYDZ4Q/viewform",
+    },
+    {
+      title: "NameCoach (Students)",
+      appUrl: "namecoach://",
+      webUrl:
+        "https://www.name-coach.com/events/ca-student-community-2025-26/readonly",
+    },
+    {
+      title: "MBTA Form",
+      appUrl: "googledocs://",
+      webUrl:
+        "https://docs.google.com/forms/d/e/1FAIpQLSf-wpBYm-p8EdTg9pCESK2fJeE5CRYuOqSGzwwF1puN6zB-mw/viewform",
+    },
+    {
+      title: "Printing",
+      appUrl:
+        "googlechrome://sites.google.com/concordacademy.org/concordacademystudentresources/printing",
+      webUrl:
+        "https://sites.google.com/concordacademy.org/concordacademystudentresources/printing",
+    },
+    {
+      title: "Student Tech Resources",
+      appUrl:
+        "googlechrome://sites.google.com/concordacademy.org/concord-academy-tech-resources/home",
+      webUrl:
+        "https://sites.google.com/concordacademy.org/concord-academy-tech-resources/home",
+    },
+  ];
 
   return (
     <ParallaxScrollView
@@ -84,73 +183,15 @@ export default function HomeScreen() {
         <ThemedText type="title">CA Student Resources</ThemedText>
       </ThemedView>
       <View style={styles.buttonGrid}>
-        {Object.entries(links).map(([title, url]) => (
-          <View key={title} style={styles.buttonWrapper}>
-            <LinkButton title={title} onPress={() => Linking.openURL(url)} />
+        {links.map((link) => (
+          <View key={link.title} style={styles.buttonWrapper}>
+            <LinkButton
+              title={link.title}
+              onPress={() => handleDeepLink(link.appUrl, link.webUrl)}
+            />
           </View>
         ))}
       </View>
-      {/* <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-          <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-          {Platform.select({
-          ios: "cmd + d",
-          android: "cmd + m",
-          web: "F12",
-          })}
-          </ThemedText>{" "}
-          to open developer tools.
-          </ThemedText>
-          </ThemedView> */}
-      {/* <ThemedView style={styles.stepContainer}> */}
-      {/*   <Link href="/modal"> */}
-      {/*     <Link.Trigger> */}
-      {/*       <ThemedText type="subtitle">Step 2: Explore</ThemedText> */}
-      {/*     </Link.Trigger> */}
-      {/*     <Link.Preview /> */}
-      {/*     <Link.Menu> */}
-      {/*       <Link.MenuAction */}
-      {/*         title="Action" */}
-      {/*         icon="cube" */}
-      {/*         onPress={() => alert("Action pressed")} */}
-      {/*       /> */}
-      {/*       <Link.MenuAction */}
-      {/*         title="Share" */}
-      {/*         icon="square.and.arrow.up" */}
-      {/*         onPress={() => alert("Share pressed")} */}
-      {/*       /> */}
-      {/*       <Link.Menu title="More" icon="ellipsis"> */}
-      {/*         <Link.MenuAction */}
-      {/*           title="Delete" */}
-      {/*           icon="trash" */}
-      {/*           destructive */}
-      {/*           onPress={() => alert("Delete pressed")} */}
-      {/*         /> */}
-      {/*       </Link.Menu> */}
-      {/*     </Link.Menu> */}
-      {/*   </Link> */}
-
-      {/*   <ThemedText> */}
-      {/*     {`Tap the Explore tab to learn more about what's included in this starter app.`} */}
-      {/*   </ThemedText> */}
-      {/* </ThemedView> */}
-      {/* <ThemedView style={styles.stepContainer}> */}
-      {/*   <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText> */}
-      {/*   <ThemedText> */}
-      {/*     {`When you're ready, run `} */}
-      {/*     <ThemedText type="defaultSemiBold"> */}
-      {/*       npm run reset-project */}
-      {/*     </ThemedText>{" "} */}
-      {/*     to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "} */}
-      {/*     directory. This will move the current{" "} */}
-      {/*     <ThemedText type="defaultSemiBold">app</ThemedText> to{" "} */}
-      {/*     <ThemedText type="defaultSemiBold">app-example</ThemedText>. */}
-      {/*   </ThemedText> */}
-      {/* </ThemedView> */}
     </ParallaxScrollView>
   );
 }

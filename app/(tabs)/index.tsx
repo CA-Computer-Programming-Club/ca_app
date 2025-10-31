@@ -1,15 +1,17 @@
 import {
   GestureResponderEvent,
   Image,
-  Linking,
   StyleSheet,
   View,
   Platform,
 } from "react-native";
+import * as Linking from "expo-linking";
+import AppLink from "react-native-app-link";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { openInbox } from "react-native-email-link";
 
 import { Pressable, Text } from "react-native";
 
@@ -32,13 +34,14 @@ export default function HomeScreen() {
     try {
       // Try to open the app first
       const supported = await Linking.canOpenURL(appUrl);
+      console.log(`Can open ${appUrl}:`, supported);
 
-      if (supported) {
-        await Linking.openURL(appUrl);
-      } else {
-        // Fallback to web URL
-        await Linking.openURL(webUrl);
-      }
+      // if (supported) {
+      await Linking.openURL(appUrl);
+      // } else {
+      //   // Fallback to web URL
+      //   await Linking.openURL(webUrl);
+      // }
     } catch (error) {
       console.error("Error opening URL:", error);
       // Final fallback to web URL
@@ -46,120 +49,126 @@ export default function HomeScreen() {
     }
   };
 
-  type LinkConfig = {
-    title: string;
-    appUrl: string;
-    webUrl: string;
-  };
-
-  const links: LinkConfig[] = [
+  const links: { title: string; onPress: () => void }[] = [
     {
-      title: "Gmail",
-      appUrl: "googlegmail://",
-      webUrl: "https://concord.onelogin.com/launch/52278/?tab=cm",
+      title: "Email",
+      onPress: () => openInbox(),
     },
     {
       title: "Google Drive",
-      appUrl: "google-drive://",
-      webUrl: "https://drive.google.com/a/concordacademy.org",
+      onPress: () =>
+        AppLink.maybeOpenURL("googledrive://", {
+          appName: "Google Drive",
+          appStoreId: "id507874739",
+          playStoreId: "com.google.android.apps.docs",
+        }),
     },
     {
       title: "Schoology",
-      appUrl: "schoology://",
-      webUrl: "https://concord.onelogin.com/launch/206009/",
+      onPress: () =>
+        AppLink.maybeOpenURL("schoology://", {
+          appName: "Schoology",
+          appStoreId: "id411766326",
+          playStoreId: "com.schoology.app",
+        }),
     },
     {
       title: "Orah",
-      appUrl: "orah://",
-      webUrl: "https://app.orah.com/login",
+      onPress: () =>
+        // TODO: Find out correct URL
+        AppLink.maybeOpenURL("orah://", {
+          appName: "Orah",
+          appStoreId: "id1383553237",
+          playStoreId: "com.boardingware.studentapp",
+        }),
     },
     {
       title: "PowerSchool",
-      appUrl: "powerschool://",
-      webUrl: "https://concordacademy.powerschool.com/",
+      onPress: () => Linking.openURL("https://concordacademy.powerschool.com/"),
     },
     {
       title: "StuFac Menu",
-      appUrl: "sodexo://",
-      webUrl: "https://concordacademydining.sodexomyway.com/",
+      onPress: () =>
+        Linking.openURL("https://concordacademydining.sodexomyway.com/en-us/"),
     },
     {
       title: "Student Council",
-      appUrl:
-        "googlechrome://sites.google.com/concordacademy.org/ca-all-school-council/home",
-      webUrl:
-        "https://sites.google.com/concordacademy.org/ca-all-school-council/home",
+      onPress: () =>
+        Linking.openURL(
+          "https://sites.google.com/concordacademy.org/ca-all-school-council/home",
+        ),
     },
     {
       title: "CA Library",
-      appUrl:
-        "googlechrome://sites.google.com/concordacademy.org/concordacademylibrary/home",
-      webUrl:
-        "https://sites.google.com/concordacademy.org/concordacademylibrary/home",
+      onPress: () =>
+        Linking.openURL(
+          "https://sites.google.com/concordacademy.org/concordacademylibrary/home",
+        ),
     },
     {
       title: "Community + Equity",
-      appUrl:
-        "googlechrome://sites.google.com/concordacademy.org/community/home",
-      webUrl: "https://sites.google.com/concordacademy.org/community/home",
+      onPress: () =>
+        Linking.openURL(
+          "https://sites.google.com/concordacademy.org/community/home",
+        ),
     },
     {
       title: "NameCoach (Fac/Staff)",
-      appUrl: "namecoach://",
-      webUrl:
-        "https://www.name-coach.com/events/ca-faculty-and-staff-2025-26/readonly",
+      onPress: () =>
+        Linking.openURL(
+          "https://www.name-coach.com/events/ca-faculty-and-staff-2025-26/readonly",
+        ),
     },
     {
       title: "CA Calendar",
-      appUrl:
-        Platform.OS === "ios"
-          ? "calshow://"
-          : "content://com.android.calendar/time/",
-      webUrl: "http://calendar.concordacademy.org/?hl=en?tab=cc",
+      onPress: () =>
+        Linking.openUrl("http://calendar.concordacademy.org/?hl=en?tab=cc"),
     },
     {
       title: "Family Portal",
-      appUrl: "googlechrome://concordacademy.org/family-portal",
-      webUrl: "http://concordacademy.org/family-portal",
+      onPress: () => Linking.openURL("http://concordacademy.org/family-portal"),
     },
     {
       title: "Directory",
-      appUrl:
-        "googlechrome://sites.google.com/concordacademy.org/concordacademystudentresources/directory",
-      webUrl:
-        "https://sites.google.com/concordacademy.org/concordacademystudentresources/directory",
+      onPress: () =>
+        Linking.openURL(
+          "https://sites.google.com/concordacademy.org/concordacademystudentresources/directory",
+        ),
     },
     {
       title: "Parking Form",
-      appUrl: "googledocs://",
-      webUrl:
-        "https://docs.google.com/forms/d/e/1FAIpQLSeiAXT8-btu55JU45neDYzesiYkH76ZeSPutZ18xXcvXYDZ4Q/viewform",
+      onPress: () =>
+        Linking.openURL(
+          "https://docs.google.com/forms/d/e/1FAIpQLSeiAXT8-btu55JU45neDYzesiYkH76ZeSPutZ18xXcvXYDZ4Q/viewform",
+        ),
     },
     {
       title: "NameCoach (Students)",
-      appUrl: "namecoach://",
-      webUrl:
-        "https://www.name-coach.com/events/ca-student-community-2025-26/readonly",
+      onPress: () =>
+        Linking.openURL(
+          "https://www.name-coach.com/events/ca-student-community-2025-26/readonly",
+        ),
     },
     {
       title: "MBTA Form",
-      appUrl: "googledocs://",
-      webUrl:
-        "https://docs.google.com/forms/d/e/1FAIpQLSf-wpBYm-p8EdTg9pCESK2fJeE5CRYuOqSGzwwF1puN6zB-mw/viewform",
+      onPress: () =>
+        Linking.openURL(
+          "https://docs.google.com/forms/d/e/1FAIpQLSf-wpBYm-p8EdTg9pCESK2fJeE5CRYuOqSGzwwF1puN6zB-mw/viewform",
+        ),
     },
     {
       title: "Printing",
-      appUrl:
-        "googlechrome://sites.google.com/concordacademy.org/concordacademystudentresources/printing",
-      webUrl:
-        "https://sites.google.com/concordacademy.org/concordacademystudentresources/printing",
+      onPress: () =>
+        Linking.openURL(
+          "https://sites.google.com/concordacademy.org/concordacademystudentresources/printing",
+        ),
     },
     {
       title: "Student Tech Resources",
-      appUrl:
-        "googlechrome://sites.google.com/concordacademy.org/concord-academy-tech-resources/home",
-      webUrl:
-        "https://sites.google.com/concordacademy.org/concord-academy-tech-resources/home",
+      onPress: () =>
+        Linking.openURL(
+          "https://sites.google.com/concordacademy.org/concord-academy-tech-resources/home",
+        ),
     },
   ];
 
@@ -187,7 +196,25 @@ export default function HomeScreen() {
           <View key={link.title} style={styles.buttonWrapper}>
             <LinkButton
               title={link.title}
-              onPress={() => handleDeepLink(link.appUrl, link.webUrl)}
+              onPress={link.onPress}
+              /* onPress={() => handleDeepLink(link.appUrl, link.webUrl)} */
+              /* onPress={ */
+              /*   () => openInbox() */
+              /*   // Linking.openURL( */
+              /*   //   "intent://#Intent;package=com.google.android.gm;scheme=mailto;end", */
+              /*   // ) */
+              /* } */
+              /* onPress={async () => { */
+              /*   try { */
+              /*     await AppLink.maybeOpenURL("://", { */
+              /*       appName: "Gmail", */
+              /*       appStoreId: "id422689480", // iOS App Store ID */
+              /*       playStoreId: "com.google.android.gm", // Android Package Name */
+              /*     }); */
+              /*   } catch (error) { */
+              /*     console.log("Failed to open Gmail:", error); */
+              /*   } */
+              /* }} */
             />
           </View>
         ))}

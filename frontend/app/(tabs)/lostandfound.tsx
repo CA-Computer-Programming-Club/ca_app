@@ -1,3 +1,4 @@
+import { useNavigation } from "expo-router";
 import { useState } from "react";
 import {
   ActionSheetIOS,
@@ -8,7 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "expo-router";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
@@ -33,6 +33,26 @@ export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const navigation = useNavigation();
 
+async function addLostItem() {
+  const response = await fetch("http://127.0.0.1:8000/add_lost_item", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const data = await response.json();
+  console.log("Response from Python:", data);
+}
+
+async function addFoundItem() {
+  const response = await fetch("http://127.0.0.1:8000/add_found_item", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const data = await response.json();
+  console.log("Response from Python:", data);
+}
+
   const showActionSheet = () => {
     ActionSheetIOS.showActionSheetWithOptions(
       {
@@ -42,9 +62,9 @@ export default function TabTwoScreen() {
       },
       (buttonIndex) => {
         if (buttonIndex === 0) {
-          alert("Lost Item");
+          addLostItem();
         } else if (buttonIndex === 1) {
-          alert("Found Item");
+          addFoundItem();
         }
       },
     );
@@ -153,6 +173,7 @@ export default function TabTwoScreen() {
             <MenuOptions>
               <MenuOption
                 onSelect={() => {
+                  addLostItem();
                   alert("Lost Item");
                   setShowMenu(false);
                 }}
@@ -160,6 +181,7 @@ export default function TabTwoScreen() {
               />
               <MenuOption
                 onSelect={() => {
+                  addFoundItem();
                   alert("Found Item");
                   setShowMenu(false);
                 }}

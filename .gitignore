@@ -41,3 +41,5 @@ frontend/app-example
 # generated native folders
 frontend/ios
 frontend/android
+
+backend/__pycache__

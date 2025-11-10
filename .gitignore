@@ -44,3 +44,7 @@ frontend/ios
 frontend/android
 
 backend/__pycache__
+
+# database
+backend/database.db
+backend/uploads/

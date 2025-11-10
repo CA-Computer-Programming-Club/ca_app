@@ -1,5 +1,5 @@
 import { useNavigation } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActionSheetIOS,
   Image,
@@ -8,11 +8,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  Button,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
+import showAlert from "@/components/alert";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { ThemedModal } from "@/components/themed-modal";
+import { ThemedTextInput } from "@/components/themed-text-input";
 import {
   Menu,
   MenuOption,
@@ -20,79 +26,247 @@ import {
   MenuTrigger,
 } from "react-native-popup-menu";
 
-import dummyData from "@/data/dummy-data.json";
+import * as ImagePicker from "expo-image-picker";
 
-const imageMap: Record<string, any> = {
-  "black_wallet.jpg": require("@/assets/images/black_wallet.jpg"),
-  "keys.jpg": require("@/assets/images/keys.jpg"),
-  "black_hoodie.jpg": require("@/assets/images/black_hoodie.jpg"),
-  "water_bottle.jpg": require("@/assets/images/water_bottle.jpg"),
-};
+import Constants from "expo-constants";
+
+interface Item {
+  id: string | number;
+  type: string;
+  title: string;
+  location: string;
+  description: string;
+  image_filename: string | null;
+  created_at: string;
+}
+
+interface NewItemData {
+  type: string;
+  title: string;
+  location: string;
+  description: string;
+  image?: any;
+}
+
+const SERVER_URL = "http://10.100.5.193:8000";
 
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const navigation = useNavigation();
-
-async function addLostItem() {
-  const response = await fetch("http://127.0.0.1:8000/add_lost_item", {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
+  const [items, setItems] = useState<Item[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<"lost" | "found">("lost");
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    location: "",
   });
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
-  const data = await response.json();
-  console.log("Response from Python:", data);
-}
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
-async function addFoundItem() {
-  const response = await fetch("http://127.0.0.1:8000/add_found_item", {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
+  const fetchItems = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/get_all_items`);
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
 
-  const data = await response.json();
-  console.log("Response from Python:", data);
-}
+  const pickImage = async () => {
+    try {
+      // Web implementation
+      if (Platform.OS === "web") {
+        return new Promise((resolve) => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+
+          input.onchange = (event) => {
+            const file = (event.target as HTMLInputElement).files?.[0];
+            if (file) {
+              const imageUrl = URL.createObjectURL(file);
+              setSelectedImage(imageUrl);
+              // Store the file for upload
+              setSelectedImageFile(file);
+            }
+          };
+
+          input.click();
+        });
+      }
+
+      // Mobile implementation (your existing code)
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        showAlert("Permission Denied", "Camera roll permissions are required.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showAlert("Error", "Failed to pick image");
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        showAlert("Sorry, we need camera permissions to make this work!");
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      showAlert("Error", "Failed to take photo");
+    }
+  };
+
+  const showImagePickerOptions = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Cancel", "Take Photo", "Choose from Library"],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) takePhoto();
+          else if (buttonIndex === 2) pickImage();
+        },
+      );
+    } else if (Platform.OS === "web") {
+      pickImage();
+    } else {
+      showAlert("Select Image", "Choose an option", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Take Photo", onPress: takePhoto },
+        { text: "Choose from Library", onPress: pickImage },
+      ]);
+    }
+  };
+
+  const openAddModal = (type: "lost" | "found") => {
+    setModalType(type);
+    setFormData({ title: "", description: "", location: "" });
+    setSelectedImage(null);
+    setModalVisible(true);
+  };
+
+  const submitItem = async () => {
+    if (!formData.title || !formData.description || !formData.location) {
+      showAlert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("location", formData.location);
+
+      // Append image if selected - FIXED VERSION
+      if (Platform.OS === "web" && selectedImageFile) {
+        // Web: Use the File object
+        formDataToSend.append("image", selectedImageFile);
+      } else if (selectedImage) {
+        // Extract filename from URI
+        const filename = selectedImage.split("/").pop() || "photo.jpg";
+
+        // Get file extension and determine MIME type
+        const match = /\.(\w+)$/.exec(filename);
+        const mimeType = match ? `image/${match[1]}` : "image/jpeg";
+
+        formDataToSend.append("image", {
+          uri: selectedImage,
+          name: filename,
+          type: mimeType,
+        } as any);
+      }
+
+      const endpoint =
+        modalType === "lost" ? "add_lost_item" : "add_found_item";
+
+      console.log("Submitting to:", `${SERVER_URL}/${endpoint}`);
+
+      const response = await fetch(`${SERVER_URL}/${endpoint}`, {
+        method: "POST",
+        body: formDataToSend,
+        // REMOVE the Content-Type header - let React Native set it automatically
+        // headers: {
+        //   "Content-Type": "multipart/form-data",
+        // },
+      });
+
+      console.log("Response status:", response.status);
+
+      if (response.ok) {
+        const addedItem = await response.json();
+        setItems((prev) => [addedItem, ...prev]);
+        setModalVisible(false);
+        setFormData({ title: "", description: "", location: "" });
+        setSelectedImage(null);
+        showAlert("Success", `${modalType} item added successfully!`);
+      } else {
+        const errorText = await response.text();
+        console.error("Server response:", errorText);
+        throw new Error(
+          `Failed to add item: ${response.status} - ${errorText}`,
+        );
+      }
+    } catch (error: any) {
+      console.error("Error adding item:", error);
+      showAlert("Error", `Failed to add item: ${error.message}`);
+    }
+  };
 
   const showActionSheet = () => {
     ActionSheetIOS.showActionSheetWithOptions(
-      {
-        options: ["Lost Item", "Found Item"],
-        // cancelButtonIndex: 0,
-        // destructiveButtonIndex: 0,
-      },
+      { options: ["Lost Item", "Found Item"] },
       (buttonIndex) => {
-        if (buttonIndex === 0) {
-          addLostItem();
-        } else if (buttonIndex === 1) {
-          addFoundItem();
-        }
+        if (buttonIndex === 0) openAddModal("lost");
+        else if (buttonIndex === 1) openAddModal("found");
       },
     );
   };
 
   const handleMenuTrigger = () => {
-    if (Platform.OS === "ios") {
-      showActionSheet();
-    } else {
-      setShowMenu(true);
-    }
+    if (Platform.OS === "ios") showActionSheet();
+    else setShowMenu(true);
   };
 
-  // Custom Plus Button Component
   const PlusButton = ({ onPress }: { onPress: any }) => (
     <TouchableOpacity style={styles.circularButton} onPress={onPress}>
       <ThemedText style={styles.plusSign}>+</ThemedText>
     </TouchableOpacity>
   );
 
-  const renderPost = (item: {
-    id: string | number;
-    type: string;
-    title: string;
-    location: string;
-    description: string;
-    image: string;
-  }) => (
+  const renderPost = (item: Item) => (
     <ThemedView
       key={item.id}
       style={styles.postContainer}
@@ -130,12 +304,18 @@ async function addFoundItem() {
         >
           {item.description}
         </ThemedText>
-        <Image
-          source={imageMap[item.image]}
-          style={{ width: 100, height: 100, backgroundColor: "lightgray" }}
-        />
+        {item.image_filename && (
+          <Image
+            source={{ uri: `${SERVER_URL}/uploads/${item.image_filename}` }}
+            style={styles.image}
+          />
+        )}
       </TouchableOpacity>
     </ThemedView>
+  );
+
+  items.forEach((item) =>
+    console.log(`${SERVER_URL}/uploads/${item.image_filename}`),
   );
 
   return (
@@ -143,19 +323,114 @@ async function addFoundItem() {
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
         showsVerticalScrollIndicator={false}
-        showsHorizontalScrollIndicator={false}
       >
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Lost and Found</ThemedText>
         </ThemedView>
         <ThemedText>Lost and Found items will be listed here</ThemedText>
         <ScrollView contentContainerStyle={styles.postsWrapper}>
-          {dummyData.map((item) => renderPost(item))}
+          {items.map((item) => renderPost(item))}
         </ScrollView>
       </ParallaxScrollView>
 
+      <ThemedModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={`Add ${modalType === "lost" ? "Lost" : "Found"} Item`}
+        lightBackgroundColor={{
+          modal: "#ffffff",
+          overlay: "rgba(0,0,0,0.4)",
+        }}
+        darkBackgroundColor={{
+          modal: "#2c2c2e",
+          overlay: "rgba(0,0,0,0.6)",
+        }}
+      >
+        <ThemedTextInput
+          style={styles.input}
+          placeholder="Title"
+          value={formData.title}
+          onChangeText={(text) =>
+            setFormData((prev) => ({ ...prev, title: text }))
+          }
+          returnKeyType="done"
+          lightColor="#000000"
+          darkColor="#FFFFFF"
+          placeholderLightColor="#666666"
+          placeholderDarkColor="#AAAAAA"
+        />
+        <ThemedTextInput
+          style={styles.multilineInput}
+          placeholder="Description"
+          value={formData.description}
+          onChangeText={(text) =>
+            setFormData((prev) => ({ ...prev, description: text }))
+          }
+          multiline
+          lightColor="#000000"
+          darkColor="#FFFFFF"
+          placeholderLightColor="#666666"
+          placeholderDarkColor="#AAAAAA"
+        />
+        <ThemedTextInput
+          style={styles.input}
+          placeholder="Location"
+          value={formData.location}
+          onChangeText={(text) =>
+            setFormData((prev) => ({ ...prev, location: text }))
+          }
+          returnKeyType="done"
+          lightColor="#000000"
+          darkColor="#FFFFFF"
+          placeholderLightColor="#666666"
+          placeholderDarkColor="#AAAAAA"
+        />
+
+        {/* Image Selection */}
+        <View style={styles.imageSection}>
+          <ThemedText style={styles.imageLabel}>Image (Optional)</ThemedText>
+          {selectedImage ? (
+            <View style={styles.imagePreviewContainer}>
+              <Image
+                source={{ uri: selectedImage }}
+                style={styles.imagePreview}
+              />
+              <TouchableOpacity
+                style={styles.changeImageButton}
+                onPress={showImagePickerOptions}
+              >
+                <ThemedText style={styles.changeImageText}>
+                  Change Image
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.addImageButton}
+              onPress={showImagePickerOptions}
+            >
+              <ThemedText style={styles.addImageText}>+ Add Image</ThemedText>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.modalButtons}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={() => setModalVisible(false)}
+          >
+            <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.submitButton]}
+            onPress={submitItem}
+          >
+            <ThemedText style={styles.submitButtonText}>Add Item</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedModal>
+
       {Platform.OS === "ios" ? (
-        // iOS - Use custom PlusButton to trigger ActionSheet
         <View style={styles.floatingButtonContainer}>
           <PlusButton onPress={handleMenuTrigger} />
         </View>
@@ -165,7 +440,7 @@ async function addFoundItem() {
             <MenuTrigger
               onPress={handleMenuTrigger}
               customStyles={{
-                triggerWrapper: styles.circularButton, // use your button style
+                triggerWrapper: styles.circularButton,
                 triggerText: styles.plusSign,
               }}
               text="+"
@@ -173,16 +448,14 @@ async function addFoundItem() {
             <MenuOptions>
               <MenuOption
                 onSelect={() => {
-                  addLostItem();
-                  alert("Lost Item");
+                  openAddModal("lost");
                   setShowMenu(false);
                 }}
                 text="Lost Item"
               />
               <MenuOption
                 onSelect={() => {
-                  addFoundItem();
-                  alert("Found Item");
+                  openAddModal("found");
                   setShowMenu(false);
                 }}
                 text="Found Item"
@@ -202,15 +475,8 @@ const styles = StyleSheet.create({
     left: -35,
     position: "absolute",
   },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  floatingButtonContainer: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-  },
+  titleContainer: { flexDirection: "row", gap: 8 },
+  floatingButtonContainer: { position: "absolute", bottom: 20, right: 20 },
   circularButton: {
     width: 60,
     height: 60,
@@ -218,8 +484,8 @@ const styles = StyleSheet.create({
     backgroundColor: "purple",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 5, // Android shadow
-    shadowColor: "#000", // iOS shadow
+    elevation: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -230,25 +496,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     lineHeight: 24,
     textAlign: "center",
-    includeFontPadding: false,
   },
-  triggerWrapper: {
-    // Hide the default trigger
-    width: 0,
-    height: 0,
-    opacity: 0,
-  },
-  postsWrapper: {
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 4,
-  },
+  postsWrapper: { paddingTop: 20, paddingBottom: 20, paddingHorizontal: 4 },
   postContainer: {
-    // backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    // marginHorizontal: 8,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -257,23 +510,126 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.2)",
     elevation: 3,
   },
-  postTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+  postTitle: { fontSize: 18, fontWeight: "bold" },
+  postType: { fontSize: 14, fontWeight: "600", marginTop: 4 },
+  postLocation: { fontSize: 13, marginTop: 4 },
+  postDescription: { fontSize: 13, marginTop: 6 },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  postType: {
-    fontSize: 14,
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 12,
+    width: "80%",
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    // This combination is key:
+    textAlign: "left",
+    textAlignVertical: "center", // works for Android
+    lineHeight: 16, // iOS uses this to vertically center text
+    paddingVertical: Platform.OS === "ios" ? 10 : 12, // balance iOS baseline
+  },
+  multilineInput: {
+    height: 80,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    textAlignVertical: "top",
+    marginBottom: 10,
+  },
+  imageSection: {
+    marginTop: 15,
+  },
+  imageLabel: {
+    fontSize: 16,
     fontWeight: "600",
-    marginTop: 4,
+    marginBottom: 8,
   },
-  postLocation: {
-    fontSize: 13,
-    marginTop: 4,
-    // color: "#555",
+  imagePreviewContainer: {
+    alignItems: "center",
   },
-  postDescription: {
-    fontSize: 13,
-    marginTop: 6,
-    // color: "#333",
+  imagePreview: {
+    width: 150,
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 10,
+    backgroundColor: "#ccc",
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginTop: 10,
+    backgroundColor: "#ccc",
+  },
+  addImageButton: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderStyle: "dashed",
+    borderRadius: 8,
+    padding: 20,
+    alignItems: "center",
+  },
+  addImageText: {
+    color: "#666",
+  },
+  changeImageButton: {
+    backgroundColor: "#f0f0f0",
+    padding: 10,
+    borderRadius: 6,
+  },
+  changeImageText: {
+    color: "#333",
+    fontSize: 14,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    gap: 10,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    // iOS shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  submitButton: {
+    backgroundColor: "#13694E",
+  },
+  cancelButton: {
+    backgroundColor: "#f8f8f8",
+    borderWidth: 1,
+    borderColor: "#c8c7cc",
+  },
+  submitButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  cancelButtonText: {
+    color: "#13694E",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

@@ -1,5 +1,10 @@
 {
-  "dependencies": {
-    "node-fetch": "^3.3.2"
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && fastapi dev main.py",
+    "dev:frontend": "cd frontend && npm run web"
   }
 }

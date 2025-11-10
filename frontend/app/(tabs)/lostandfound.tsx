@@ -28,7 +28,7 @@ import {
 
 import * as ImagePicker from "expo-image-picker";
 
-import Constants from "expo-constants";
+import { SERVER_URL } from "@/config";
 
 interface Item {
   id: string | number;
@@ -47,8 +47,6 @@ interface NewItemData {
   description: string;
   image?: any;
 }
-
-const SERVER_URL = "http://10.100.5.193:8000";
 
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);

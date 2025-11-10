@@ -2,30 +2,100 @@ import { View, StyleSheet, Image, ScrollView } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useLocalSearchParams, Stack } from "expo-router";
-import { Post } from "@/types/posts";
+import { useEffect, useState } from "react";
+import { SERVER_URL } from "@/config";
 
-import rawData from "@/data/dummy-data.json";
-const dummyData = rawData as Post[];
-
-const imageMap: Record<string, any> = {
-  "black_wallet.jpg": require("@/assets/images/black_wallet.jpg"),
-  "keys.jpg": require("@/assets/images/keys.jpg"),
-  "black_hoodie.jpg": require("@/assets/images/black_hoodie.jpg"),
-  "water_bottle.jpg": require("@/assets/images/water_bottle.jpg"),
-};
+interface Post {
+  id: string | number;
+  type: string;
+  title: string;
+  location: string;
+  description: string;
+  image_filename: string | null;
+  created_at: string;
+}
 
 export default function PostDetailScreen() {
   const { post } = useLocalSearchParams();
+  const [postData, setPostData] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const postData: Post | undefined = dummyData.find(
-    (item) => item.id.toString() === (post as string),
-  );
+  useEffect(() => {
+    fetchPostDetail();
+  }, [post]);
+
+  const fetchPostDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // First, try to get the specific post from all items
+      const response = await fetch(`${SERVER_URL}/get_all_items`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch items: ${response.status}`);
+      }
+
+      const allItems: Post[] = await response.json();
+
+      // Find the specific post by ID
+      const foundPost = allItems.find(
+        (item) => item.id.toString() === (post as string),
+      );
+
+      if (foundPost) {
+        setPostData(foundPost);
+      } else {
+        setError("Post not found");
+      }
+    } catch (err) {
+      console.error("Error fetching post detail:", err);
+      setError("Failed to load post");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <ThemedView style={styles.container}>
+        <Stack.Screen
+          options={{
+            title: "Loading...",
+            headerBackTitle: "Back",
+          }}
+        />
+        <View style={styles.centerContent}>
+          <ThemedText>Loading post...</ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (error || !postData) {
+    return (
+      <ThemedView style={styles.container}>
+        <Stack.Screen
+          options={{
+            title: "Error",
+            headerBackTitle: "Back",
+          }}
+        />
+        <View style={styles.centerContent}>
+          <ThemedText style={styles.errorText}>
+            {error || "Post not found"}
+          </ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen
         options={{
-          title: postData?.title,
+          title: postData.title,
           headerBackTitle: "Back",
         }}
       />
@@ -34,44 +104,51 @@ export default function PostDetailScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.imageContainer}>
-          <Image
-            source={imageMap[postData?.image]}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
+        {postData.image_filename && (
+          <View style={styles.imageContainer}>
+            <Image
+              source={{
+                uri: `${SERVER_URL}/uploads/${postData.image_filename}`,
+              }}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
+        )}
 
         <View style={styles.contentContainer}>
           <ThemedText type="title" style={styles.title}>
-            {postData?.title}
+            {postData.title}
           </ThemedText>
 
           <ThemedText
             style={[
               styles.type,
-              { color: postData?.type === "lost" ? "#c0392b" : "#27ae60" },
+              { color: postData.type === "lost" ? "#c0392b" : "#27ae60" },
             ]}
           >
-            {postData?.type.toUpperCase()}
+            {postData.type.toUpperCase()}
           </ThemedText>
 
           <ThemedText style={styles.location}>
-            {postData?.type === "lost"
-              ? "Last Seen: 📍 " + postData?.location
-              : "📍 " + postData?.location}
+            {postData.type === "lost"
+              ? "Last Seen: 📍 " + postData.location
+              : "📍 " + postData.location}
           </ThemedText>
 
           <ThemedText style={styles.description}>
-            {postData?.description}
+            {postData.description}
           </ThemedText>
 
           <View style={styles.metaContainer}>
             <ThemedText style={styles.metaText}>
-              Item ID: #{postData?.id}
+              Item ID: #{postData.id}
             </ThemedText>
             <ThemedText style={styles.metaText}>
-              Status: {postData?.type === "lost" ? "Missing" : "Found"}
+              Status: {postData.type === "lost" ? "Missing" : "Found"}
+            </ThemedText>
+            <ThemedText style={styles.metaText}>
+              Posted: {new Date(postData.created_at).toLocaleDateString()}
             </ThemedText>
           </View>
         </View>
@@ -97,6 +174,7 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+    borderRadius: 8, // Added border radius here
   },
   contentContainer: {
     padding: 20,
@@ -132,5 +210,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.7,
     marginBottom: 4,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    color: "#c0392b",
+    textAlign: "center",
+    fontSize: 16,
   },
 });

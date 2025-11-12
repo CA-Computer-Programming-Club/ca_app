@@ -61,6 +61,14 @@ export default function TabTwoScreen() {
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchItems();
+    console.log("Refreshed items");
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     fetchItems();
@@ -99,7 +107,7 @@ export default function TabTwoScreen() {
         });
       }
 
-      // Mobile implementation (your existing code)
+      // Mobile implementation
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
@@ -188,9 +196,7 @@ export default function TabTwoScreen() {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("location", formData.location);
 
-      // Append image if selected - FIXED VERSION
       if (Platform.OS === "web" && selectedImageFile) {
-        // Web: Use the File object
         formDataToSend.append("image", selectedImageFile);
       } else if (selectedImage) {
         // Extract filename from URI
@@ -215,10 +221,6 @@ export default function TabTwoScreen() {
       const response = await fetch(`${SERVER_URL}/${endpoint}`, {
         method: "POST",
         body: formDataToSend,
-        // REMOVE the Content-Type header - let React Native set it automatically
-        // headers: {
-        //   "Content-Type": "multipart/form-data",
-        // },
       });
 
       console.log("Response status:", response.status);
@@ -229,7 +231,10 @@ export default function TabTwoScreen() {
         setModalVisible(false);
         setFormData({ title: "", description: "", location: "" });
         setSelectedImage(null);
-        showAlert("Success", `${modalType} item added successfully!`);
+        showAlert(
+          "Success",
+          `${modalType === "lost" ? "Lost" : "Found"} item added successfully!`,
+        );
       } else {
         const errorText = await response.text();
         console.error("Server response:", errorText);
@@ -321,6 +326,8 @@ export default function TabTwoScreen() {
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
         showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       >
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Lost and Found</ThemedText>
@@ -531,11 +538,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 10,
-    // This combination is key:
     textAlign: "left",
-    textAlignVertical: "center", // works for Android
-    lineHeight: 16, // iOS uses this to vertically center text
-    paddingVertical: Platform.OS === "ios" ? 10 : 12, // balance iOS baseline
+    textAlignVertical: "center",
+    lineHeight: 16,
+    paddingVertical: Platform.OS === "ios" ? 10 : 12,
   },
   multilineInput: {
     height: 80,
@@ -605,7 +611,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    // iOS shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,

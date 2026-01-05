@@ -122,7 +122,7 @@ export default function HomeScreen() {
     {
       title: "CA Calendar",
       onPress: () =>
-        Linking.openUrl("http://calendar.concordacademy.org/?hl=en?tab=cc"),
+        Linking.openURL("http://calendar.concordacademy.org/?hl=en?tab=cc"),
     },
     {
       title: "Family Portal",

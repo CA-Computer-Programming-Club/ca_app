@@ -148,7 +148,7 @@ export default function PostDetailScreen() {
               Status: {postData.type === "lost" ? "Missing" : "Found"}
             </ThemedText>
             <ThemedText style={styles.metaText}>
-              Posted: {new Date(postData.created_at).toLocaleDateString()}
+              Posted: {new Date(postData.created_at).toLocaleString()}
             </ThemedText>
           </View>
         </View>

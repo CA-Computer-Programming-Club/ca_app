@@ -5,13 +5,17 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uuid
 import sqlite3
-from datetime import datetime
 import os
 from pathlib import Path
+from datetime import datetime, timezone
 
 app = FastAPI()
 
 DATABASE_URL = "database.db"
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def get_db_connection():
@@ -31,8 +35,8 @@ def init_db():
             location TEXT NOT NULL,
             description TEXT,
             image_filename TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
         )
     """
     )
@@ -122,6 +126,19 @@ async def add_found_item(
     return await add_item_to_db("found", title, location, description, image)
 
 
+# TODO UPDATE ITEMS
+# updated_at = utc_now_iso()
+
+# cursor.execute(
+#     """
+#     UPDATE items
+#     SET title = ?, description = ?, updated_at = ?
+#     WHERE id = ?
+#     """,
+#     (title, description, updated_at, item_id),
+# )
+
+
 async def add_item_to_db(
     item_type: str,
     title: str,
@@ -137,12 +154,26 @@ async def add_item_to_db(
         if image and image.filename:
             image_filename = save_uploaded_file(image)
 
+        created_at = utc_now_iso()
+        updated_at = created_at
+
         cursor.execute(
             """
-            INSERT INTO items (type, title, location, description, image_filename)
-            VALUES (?, ?, ?, ?, ?)
-        """,
-            (item_type, title, location, description, image_filename),
+            INSERT INTO items (
+                type, title, location, description,
+                image_filename, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                item_type,
+                title,
+                location,
+                description,
+                image_filename,
+                created_at,
+                updated_at,
+            ),
         )
 
         item_id = cursor.lastrowid

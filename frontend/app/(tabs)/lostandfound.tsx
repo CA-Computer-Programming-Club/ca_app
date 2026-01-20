@@ -40,14 +40,6 @@ interface Item {
   created_at: string;
 }
 
-interface NewItemData {
-  type: string;
-  title: string;
-  location: string;
-  description: string;
-  image?: any;
-}
-
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const navigation = useNavigation();

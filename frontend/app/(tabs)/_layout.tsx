@@ -51,6 +51,15 @@ export default function TabLayout() {
           headerShown: true,
         }}
       />
+      <Tabs.Screen
+        name="login"
+        options={{
+          title: "Login",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="person.circle" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

@@ -24,6 +24,7 @@ const MAPPING = {
   calendar: "calendar-today",
   "calendar.badge.clock": "schedule",
   house: "home",
+  "person.circle": "person",
 } as IconMapping;
 
 /**

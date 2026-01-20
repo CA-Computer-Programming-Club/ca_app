@@ -28,7 +28,7 @@ function getServerUrl() {
   if (__DEV__) {
     return `http://${host}:8000`;
   } else {
-    return "https://your-production-domain.com";
+    return "https://tholos.site/server";
   }
 }
 

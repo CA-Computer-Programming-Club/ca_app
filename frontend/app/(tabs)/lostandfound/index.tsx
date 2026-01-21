@@ -1,5 +1,5 @@
-import { useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   ActionSheetIOS,
   Image,
@@ -13,6 +13,7 @@ import {
   Keyboard,
 } from "react-native";
 import showAlert from "@/components/alert";
+import { useNavigationState } from "@react-navigation/native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
@@ -42,7 +43,7 @@ interface Item {
 
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
-  const navigation = useNavigation();
+  const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<"lost" | "found">("lost");
@@ -270,8 +271,9 @@ export default function TabTwoScreen() {
     >
       <TouchableOpacity
         onPress={() =>
-          navigation.navigate("postdetail", {
-            post: item.id,
+          router.push({
+            pathname: "/lostandfound/postdetail",
+            params: { post: item.id },
           })
         }
       >

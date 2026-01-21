@@ -2,14 +2,13 @@ import { StyleSheet, TextInput } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
+import { ThemedTextInput } from "@/components/themed-text-input";
 import { ThemedView } from "@/components/themed-view";
 import React from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
-
-
 export default function HomeScreen() {
-  const [username, onChangeName] = React.useState('Username');
+  const [username, onChangeName] = React.useState("Username");
 
   return (
     <ParallaxScrollView
@@ -30,16 +29,15 @@ export default function HomeScreen() {
         <ThemedText style={styles.heading}>Log In</ThemedText>
       </ThemedView>
       <ThemedView>
-
-    <SafeAreaProvider>
-      <SafeAreaView>
-        <TextInput
-          style={styles.input}
-          onChangeText={onChangeName}
-          value={username}
-        />
-      </SafeAreaView>
-    </SafeAreaProvider>
+        <SafeAreaProvider>
+          <SafeAreaView>
+            <ThemedTextInput
+              style={styles.input}
+              onChangeText={onChangeName}
+              value={username}
+            />
+          </SafeAreaView>
+        </SafeAreaProvider>
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -76,5 +74,5 @@ const styles = StyleSheet.create({
     margin: 12,
     borderWidth: 1,
     padding: 10,
-  }
+  },
 });

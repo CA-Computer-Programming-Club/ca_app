@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import {
-  View,
   Platform,
   StyleSheet,
-  Text,
   Image,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import GoogleIcon from "@/assets/images/google-logo.png";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useColorScheme } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -19,16 +22,21 @@ if (Platform.OS !== "web") {
   GoogleSignin.configure({
     webClientId:
       "131708705239-02b01cemnlljld61bp6vgmmstf7c96ov.apps.googleusercontent.com",
-    clientId:
-      "131708705239-02b01cemnlljld61bp6vgmmstf7c96ov.apps.googleusercontent.com",
-    iosClientId: "TODO",
+    iosClientId:
+      "131708705239-35r4k29vfeo87obi7cjsftdk9alsfs5f.apps.googleusercontent.com",
     offlineAccess: true, // Get refresh token
   });
 }
 
+// Storage keys
+const USER_STORAGE_KEY = "google_user_info";
+const TOKEN_STORAGE_KEY = "google_auth_token";
+
 export default function LoginScreen() {
+  const scheme = useColorScheme();
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
 
   // Web authentication
   const [request, response, promptAsync] =
@@ -39,6 +47,69 @@ export default function LoginScreen() {
           scopes: ["profile", "email"],
         })
       : [null, null, null];
+
+  // ===== PERSISTENCE FUNCTIONS =====
+  const storeUserInfo = async (userData, token = null) => {
+    try {
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+      if (token) {
+        await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+      }
+    } catch (error) {
+      console.error("Error storing user info:", error);
+    }
+  };
+
+  const getUserInfo = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Error getting user info:", error);
+      return null;
+    }
+  };
+
+  const clearUserInfo = async () => {
+    try {
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
+      await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+    } catch (error) {
+      console.error("Error clearing user info:", error);
+    }
+  };
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const storedUser = await getUserInfo();
+        if (storedUser) {
+          setUserInfo(storedUser);
+
+          if (Platform.OS !== "web") {
+            try {
+              const currentUser = GoogleSignin.getCurrentUser();
+              if (!currentUser) {
+                // If token expired or invalid, clear stored data
+                await clearUserInfo();
+                setUserInfo(null);
+              }
+            } catch (error) {
+              console.log("Token validation error:", error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+      } finally {
+        setLoading(false);
+        setInitialCheckComplete(true);
+      }
+    };
+
+    checkExistingSession();
+  }, []);
 
   // Handle web authentication response
   useEffect(() => {
@@ -52,7 +123,7 @@ export default function LoginScreen() {
     handleWebAuth();
   }, [response]);
 
-  // Fetch user info for web
+  // Fetch user info for web authentication
   const fetchUserInfoWeb = async (accessToken) => {
     setLoading(true);
     try {
@@ -66,14 +137,17 @@ export default function LoginScreen() {
       const hiResPhoto = user.picture
         ? user.picture.replace(/=s\d+-c/, "=s512-c")
         : null;
-      console.log("WEB user info:", hiResPhoto);
 
-      setUserInfo({
+      const userData = {
         id: user.sub,
         name: user.name,
         email: user.email,
         photo: hiResPhoto,
-      });
+      };
+
+      setUserInfo(userData);
+
+      await storeUserInfo(userData, accessToken);
     } catch (error) {
       console.error("Error fetching user info:", error);
     } finally {
@@ -88,15 +162,20 @@ export default function LoginScreen() {
       await GoogleSignin.hasPlayServices();
       const user = await GoogleSignin.signIn();
       console.log("NATIVE user info:", user);
-      const hiResPhoto =
-        user.data.user.photo.replace(/=s\d+-c/, "=s512-c") || null;
+      const hiResPhoto = user.data.user.photo
+        ? user.data.user.photo.replace(/=s\d+-c/, "=s512-c")
+        : null;
 
-      setUserInfo({
+      const userData = {
         id: user.data.user.id,
         name: user.data.user.name,
         email: user.data.user.email,
         photo: hiResPhoto,
-      });
+      };
+
+      setUserInfo(userData);
+
+      await storeUserInfo(userData);
     } catch (error) {
       console.error("Native login error:", error);
     } finally {
@@ -104,18 +183,15 @@ export default function LoginScreen() {
     }
   };
 
-  // Logout function
   const logout = async () => {
     setLoading(true);
     try {
-      if (Platform.OS === "web") {
-        // For web, just clear local state
-        setUserInfo(null);
-      } else {
-        // For native, sign out properly
+      if (Platform.OS !== "web") {
         await GoogleSignin.signOut();
-        setUserInfo(null);
       }
+
+      await clearUserInfo();
+      setUserInfo(null);
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -123,23 +199,46 @@ export default function LoginScreen() {
     }
   };
 
-  // Custom Google Sign-In Button
   const GoogleSignInButton = ({ onPress, disabled }) => (
     <TouchableOpacity
-      style={[styles.googleButton, disabled && styles.disabled]}
+      style={[
+        styles.googleButton,
+        {
+          backgroundColor: scheme === "dark" ? "#2c2c2e" : "#fff",
+          borderColor:
+            scheme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+        },
+        disabled && styles.disabled,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
     >
-      <View style={styles.buttonContent}>
+      <ThemedView
+        style={styles.buttonContent}
+        lightColor="#fff"
+        darkColor="#2c2c2e"
+      >
         <Image source={GoogleIcon} style={styles.googleIcon} />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </View>
+        <ThemedText
+          lightColor="#444"
+          darkColor="#eee"
+          style={styles.googleButtonText}
+        >
+          Sign in with Google
+        </ThemedText>
+      </ThemedView>
     </TouchableOpacity>
   );
 
-  // Profile View Component
   const ProfileView = ({ user, onLogout }) => (
-    <View style={styles.profileContainer}>
+    <ThemedView
+      style={[
+        styles.profileContainer,
+        {
+          backgroundColor: scheme === "dark" ? "#2c2c2e" : "#fff",
+        },
+      ]}
+    >
       <Image
         source={{ uri: user.photo }}
         style={styles.profileImage}
@@ -147,32 +246,45 @@ export default function LoginScreen() {
           console.log("Failed to load image", e.nativeEvent.error)
         }
       />
-      <Text style={styles.userName}>{user.name}</Text>
-      <Text style={styles.userEmail}>{user.email}</Text>
+      <ThemedText style={styles.userName}>{user.name}</ThemedText>
+      <ThemedText
+        style={[
+          styles.userEmail,
+          { color: scheme === "dark" ? "#888" : "#666" },
+        ]}
+      >
+        {user.email}
+      </ThemedText>
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
+        <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
       </TouchableOpacity>
-    </View>
+    </ThemedView>
   );
 
-  // Loading State
-  if (loading) {
+  // Loading State and show spinner during initial check
+  if (loading || !initialCheckComplete) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
         <ActivityIndicator size="large" color="#4285F4" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+      </ThemedView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       {userInfo ? (
         <ProfileView user={userInfo} onLogout={logout} />
       ) : (
-        <View style={styles.loginContainer}>
-          <Text style={styles.title}>Welcome!</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+        <ThemedView style={styles.loginContainer}>
+          <ThemedText type="title">Welcome to the CA App!</ThemedText>
+          <ThemedText
+            lightColor="#666"
+            darkColor="#ccc"
+            style={styles.subtitle}
+          >
+            Sign in to access complete functionality
+          </ThemedText>
           {Platform.OS === "web" ? (
             <GoogleSignInButton
               onPress={() => promptAsync()}
@@ -181,9 +293,9 @@ export default function LoginScreen() {
           ) : (
             <GoogleSignInButton onPress={nativeLogin} />
           )}
-        </View>
+        </ThemedView>
       )}
-    </View>
+    </ThemedView>
   );
 }
 
@@ -192,7 +304,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
     padding: 20,
   },
   loginContainer: {
@@ -208,14 +319,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
     marginBottom: 40,
   },
   googleButton: {
-    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 5,
     paddingVertical: 12,
     paddingHorizontal: 24,
     shadowColor: "#000",
@@ -240,14 +349,14 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   googleButtonText: {
-    color: "#444",
     fontSize: 16,
     fontWeight: "600",
   },
   profileContainer: {
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
     padding: 32,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -263,24 +372,23 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     marginBottom: 20,
     borderWidth: 3,
-    borderColor: "#4285F4",
+    borderColor: "#13694E",
   },
   userName: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#333",
+    paddingVertical: 4,
     textAlign: "center",
   },
   userEmail: {
     fontSize: 14,
-    color: "#666",
     marginBottom: 30,
     textAlign: "center",
   },
   logoutButton: {
     backgroundColor: "#dc3545",
-    borderRadius: 8,
+    borderRadius: 5,
     paddingVertical: 12,
     paddingHorizontal: 32,
     minWidth: 120,

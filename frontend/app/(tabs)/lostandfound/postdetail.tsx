@@ -4,6 +4,7 @@ import { ThemedView } from "@/components/themed-view";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { SERVER_URL } from "@/config";
+import { useNavigationState } from "@react-navigation/native";
 
 interface Post {
   id: string | number;
@@ -16,6 +17,11 @@ interface Post {
 }
 
 export default function PostDetailScreen() {
+  const state = useNavigationState((s) => s);
+  console.log(
+    "STACK:",
+    state.routes.map((r) => r.name),
+  );
   const { post } = useLocalSearchParams();
   const [postData, setPostData] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);

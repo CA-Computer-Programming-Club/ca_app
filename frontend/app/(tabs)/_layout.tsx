@@ -45,13 +45,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="postdetail"
-        options={{
-          href: null, // Hide from tab bar
-          headerShown: true,
-        }}
-      />
-      <Tabs.Screen
         name="login"
         options={{
           title: "Login",

@@ -18,7 +18,7 @@ import { useColorScheme } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
 
-if (Platform.OS !== "web") {
+if (Platform.OS !== "web" && GoogleSignin) {
   GoogleSignin.configure({
     webClientId:
       "131708705239-02b01cemnlljld61bp6vgmmstf7c96ov.apps.googleusercontent.com",
@@ -87,7 +87,7 @@ export default function LoginScreen() {
         if (storedUser) {
           setUserInfo(storedUser);
 
-          if (Platform.OS !== "web") {
+          if (Platform.OS !== "web" && GoogleSignin) {
             try {
               const currentUser = GoogleSignin.getCurrentUser();
               if (!currentUser) {
@@ -157,6 +157,11 @@ export default function LoginScreen() {
 
   // Native login
   const nativeLogin = async () => {
+    if (!GoogleSignin) {
+      alert("Google Sign-In requires a custom build.");
+      return;
+    }
+
     setLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
@@ -186,7 +191,7 @@ export default function LoginScreen() {
   const logout = async () => {
     setLoading(true);
     try {
-      if (Platform.OS !== "web") {
+      if (Platform.OS !== "web" && GoogleSignin) {
         await GoogleSignin.signOut();
       }
 

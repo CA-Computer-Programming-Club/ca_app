@@ -282,7 +282,9 @@ export default function LoginScreen() {
         <ProfileView user={userInfo} onLogout={logout} />
       ) : (
         <ThemedView style={styles.loginContainer}>
-          <ThemedText type="title">Welcome to the CA App!</ThemedText>
+          <ThemedText type="title" style={styles.title}>
+            Welcome to the CA App!
+          </ThemedText>
           <ThemedText
             lightColor="#666"
             darkColor="#ccc"
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#333",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,

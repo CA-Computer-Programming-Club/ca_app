@@ -116,7 +116,6 @@ export default function LoginScreen() {
     const handleWebAuth = async () => {
       if (Platform.OS === "web" && response?.type === "success") {
         const { accessToken } = response.authentication;
-        console.log("WEB access token:", accessToken);
         await fetchUserInfoWeb(accessToken);
       }
     };
@@ -166,7 +165,6 @@ export default function LoginScreen() {
     try {
       await GoogleSignin.hasPlayServices();
       const user = await GoogleSignin.signIn();
-      console.log("NATIVE user info:", user);
       const hiResPhoto = user.data.user.photo
         ? user.data.user.photo.replace(/=s\d+-c/, "=s512-c")
         : null;

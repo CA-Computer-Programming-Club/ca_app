@@ -311,10 +311,6 @@ export default function TabTwoScreen() {
     </ThemedView>
   );
 
-  items.forEach((item) =>
-    console.log(`${SERVER_URL}/uploads/${item.image_filename}`),
-  );
-
   return (
     <View style={{ flex: 1 }}>
       <ParallaxScrollView
@@ -326,9 +322,21 @@ export default function TabTwoScreen() {
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Lost and Found</ThemedText>
         </ThemedView>
-        <ThemedText>Lost and Found items will be listed here</ThemedText>
         <ScrollView contentContainerStyle={styles.postsWrapper}>
-          {items.map((item) => renderPost(item))}
+          {items.length === 0 ? (
+            <ThemedText
+              style={{
+                textAlign: "center",
+                marginTop: 40,
+                opacity: 0.6,
+                fontSize: 16,
+              }}
+            >
+              No items found
+            </ThemedText>
+          ) : (
+            items.map((item) => renderPost(item))
+          )}
         </ScrollView>
       </ParallaxScrollView>
 

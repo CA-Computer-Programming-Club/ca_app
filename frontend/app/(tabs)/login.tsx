@@ -89,11 +89,9 @@ export default function LoginScreen() {
 
           if (Platform.OS !== "web" && GoogleSignin) {
             try {
-              const currentUser = GoogleSignin.getCurrentUser();
-              if (!currentUser) {
-                // If token expired or invalid, clear stored data
-                await clearUserInfo();
-                setUserInfo(null);
+              const storedUser = await getUserInfo();
+              if (storedUser) {
+                setUserInfo(storedUser);
               }
             } catch (error) {
               console.log("Token validation error:", error);

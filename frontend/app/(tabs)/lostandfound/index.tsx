@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   ActionSheetIOS,
@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import showAlert from "@/components/alert";
 import { useNavigationState } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
@@ -108,6 +110,61 @@ export function LostFoundToggle({ mode, onChange }: LostFoundToggleProps) {
   );
 }
 
+function SearchBar({
+  value,
+  onChangeText,
+}: {
+  value: string;
+  onChangeText: (t: string) => void;
+}) {
+  const bg = useThemeColor({ light: "#f3f4f6", dark: "#2c2c2e" }, "background");
+  const border = useThemeColor(
+    { light: "rgba(0,0,0,0.12)", dark: "rgba(255,255,255,0.12)" },
+    "text",
+  );
+  const text = useThemeColor({ light: "#111827", dark: "#ffffff" }, "text");
+  const placeholder = useThemeColor(
+    { light: "rgba(17,24,39,0.45)", dark: "rgba(255,255,255,0.45)" },
+    "text",
+  );
+
+  return (
+    <View
+      style={[
+        styles.searchContainer,
+        { backgroundColor: bg, borderColor: border },
+      ]}
+    >
+      <IconSymbol
+        name="magnifyingglass"
+        size={18}
+        color={placeholder}
+        style={{ marginRight: 8 }}
+      />
+
+      <ThemedTextInput
+        style={[styles.searchInput, { color: text }]}
+        placeholder="Search lost & found"
+        value={value}
+        onChangeText={onChangeText}
+        returnKeyType="search"
+        placeholderTextColor={placeholder}
+        autoCapitalize="none"
+        autoCorrect={false}
+        clearButtonMode={Platform.OS === "ios" ? "while-editing" : "never"}
+      />
+      {value.length > 0 && (
+        <TouchableOpacity
+          onPress={() => onChangeText("")}
+          style={styles.searchClearHitbox}
+        >
+          <IconSymbol name="xmark" size={16} color={placeholder} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
@@ -123,6 +180,31 @@ export default function TabTwoScreen() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [mode, setMode] = useState<Mode>("lost");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    if (Platform.OS === "ios") {
+      navigation.setOptions({
+        headerSearchBarOptions: {
+          placeholder: "Search lost & found",
+          onChangeText: (event) => {
+            setSearchQuery(event.nativeEvent.text);
+          },
+        },
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={handleMenuTrigger}
+            activeOpacity={0.7}
+            style={styles.headerPlus}
+          >
+            <ThemedText style={styles.headerPlusText}>+</ThemedText>
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [navigation]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -380,19 +462,53 @@ export default function TabTwoScreen() {
   );
 
   // TODO filter server-side if needed
-  const filteredItems = items.filter((item) => item.type === mode);
+  const filteredItems = items.filter((item) => {
+    if (item.type !== mode) return false;
+
+    const q = searchQuery.toLowerCase();
+
+    return (
+      item.title.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q) ||
+      item.location.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <View style={{ flex: 1 }}>
       <ParallaxScrollView
+        contentInsetAdjustmentBehavior="automatic"
         headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
         showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        headerImage={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Image
+              source={require("@/assets/images/chameleons.png")}
+              resizeMode="cover"
+              style={{ width: "100%", height: "100%" }}
+            />
+          </View>
+        }
         refreshing={refreshing}
         onRefresh={onRefresh}
       >
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Lost and Found</ThemedText>
-        </ThemedView>
+        {/* <ThemedView style={styles.titleContainer}> */}
+        {/*   <ThemedText type="title">Lost and Found</ThemedText> */}
+        {/* </ThemedView> */}
+
+        {Platform.OS !== "ios" && (
+          <View style={{ paddingHorizontal: 4, marginTop: 8 }}>
+            <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          </View>
+        )}
+
         <View style={{ paddingHorizontal: 4 }}>
           <LostFoundToggle mode={mode} onChange={setMode} />
         </View>
@@ -512,11 +628,7 @@ export default function TabTwoScreen() {
         </View>
       </ThemedModal>
 
-      {Platform.OS === "ios" ? (
-        <View style={styles.floatingButtonContainer}>
-          <PlusButton onPress={handleMenuTrigger} />
-        </View>
-      ) : (
+      {Platform.OS !== "ios" && (
         <View style={styles.floatingButtonContainer}>
           <Menu opened={showMenu} onBackdropPress={() => setShowMenu(false)}>
             <MenuTrigger
@@ -717,7 +829,6 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 12,
   },
-
   toggleButton: {
     flex: 1,
     paddingVertical: 10,
@@ -726,25 +837,70 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 0,
   },
-
   toggleButtonActive: {
     backgroundColor: "#13694E",
   },
-
   toggleButtonInactive: {
     backgroundColor: "#e5e7eb",
   },
-
   toggleText: {
     fontSize: 15,
     fontWeight: "600",
   },
-
   toggleTextActive: {
     color: "#ffffff",
   },
-
   toggleTextInactive: {
     color: "#374151",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 0,
+    fontSize: 15,
+    borderWidth: 0, // RN
+    backgroundColor: "transparent",
+    outlineStyle: "none",
+    outlineWidth: 0,
+    boxShadow: "none",
+    borderColor: "transparent",
+  },
+  searchClearHitbox: {
+    paddingLeft: 8,
+    paddingVertical: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchClear: {
+    fontSize: 16,
+    lineHeight: 16,
+    textAlignVertical: "center",
+  },
+  headerPlus: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "purple",
+    // backgroundColor: "#13694E",
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerPlusText: {
+    color: "#ffffff",
+    fontSize: 22,
+    fontWeight: "700",
+    lineHeight: 22,
   },
 });

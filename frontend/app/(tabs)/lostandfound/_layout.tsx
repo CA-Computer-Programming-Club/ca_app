@@ -4,7 +4,7 @@ export default function LostAndFoundLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        // headerShown: false,
         presentation: "card", // or "modal" for iOS-style
         animation: "slide_from_right",
       }}

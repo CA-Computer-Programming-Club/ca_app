@@ -174,6 +174,7 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
+      contentInsetAdjustmentBehavior="automatic"
       headerBackgroundColor={{ light: "#13694E", dark: "#13694E" }}
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}

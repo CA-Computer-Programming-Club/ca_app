@@ -41,6 +41,73 @@ interface Item {
   created_at: string;
 }
 
+type Mode = "lost" | "found";
+
+type LostFoundToggleProps = {
+  mode: Mode;
+  onChange: (mode: Mode) => void;
+};
+
+import { useThemeColor } from "@/hooks/use-theme-color";
+
+export function LostFoundToggle({ mode, onChange }: LostFoundToggleProps) {
+  const activeBg = useThemeColor({ light: "#13694E", dark: "#1FA37A" }, "tint");
+
+  const inactiveBg = useThemeColor(
+    { light: "#e5e7eb", dark: "#2c2c2e" },
+    "background",
+  );
+
+  const activeText = useThemeColor(
+    { light: "#ffffff", dark: "#ffffff" },
+    "text",
+  );
+
+  const inactiveText = useThemeColor(
+    { light: "#374151", dark: "#a1a1aa" },
+    "text",
+  );
+
+  return (
+    <View style={styles.toggleRow}>
+      <TouchableOpacity
+        onPress={() => onChange("lost")}
+        style={[
+          styles.toggleButton,
+          { backgroundColor: mode === "lost" ? activeBg : inactiveBg },
+          { marginRight: 8 },
+        ]}
+      >
+        <ThemedText
+          style={[
+            styles.toggleText,
+            { color: mode === "lost" ? activeText : inactiveText },
+          ]}
+        >
+          Lost
+        </ThemedText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => onChange("found")}
+        style={[
+          styles.toggleButton,
+          { backgroundColor: mode === "found" ? activeBg : inactiveBg },
+        ]}
+      >
+        <ThemedText
+          style={[
+            styles.toggleText,
+            { color: mode === "found" ? activeText : inactiveText },
+          ]}
+        >
+          Found
+        </ThemedText>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
@@ -55,6 +122,7 @@ export default function TabTwoScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [mode, setMode] = useState<Mode>("lost");
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -311,6 +379,9 @@ export default function TabTwoScreen() {
     </ThemedView>
   );
 
+  // TODO filter server-side if needed
+  const filteredItems = items.filter((item) => item.type === mode);
+
   return (
     <View style={{ flex: 1 }}>
       <ParallaxScrollView
@@ -322,6 +393,10 @@ export default function TabTwoScreen() {
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Lost and Found</ThemedText>
         </ThemedView>
+        <View style={{ paddingHorizontal: 4 }}>
+          <LostFoundToggle mode={mode} onChange={setMode} />
+        </View>
+
         <ScrollView contentContainerStyle={styles.postsWrapper}>
           {items.length === 0 ? (
             <ThemedText
@@ -335,7 +410,7 @@ export default function TabTwoScreen() {
               No items found
             </ThemedText>
           ) : (
-            items.map((item) => renderPost(item))
+            filteredItems.map((item) => renderPost(item))
           )}
         </ScrollView>
       </ParallaxScrollView>
@@ -636,5 +711,40 @@ const styles = StyleSheet.create({
     color: "#13694E",
     fontSize: 16,
     fontWeight: "600",
+  },
+  toggleRow: {
+    flexDirection: "row",
+    width: "100%",
+    marginTop: 12,
+  },
+
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 0,
+  },
+
+  toggleButtonActive: {
+    backgroundColor: "#13694E",
+  },
+
+  toggleButtonInactive: {
+    backgroundColor: "#e5e7eb",
+  },
+
+  toggleText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  toggleTextActive: {
+    color: "#ffffff",
+  },
+
+  toggleTextInactive: {
+    color: "#374151",
   },
 });

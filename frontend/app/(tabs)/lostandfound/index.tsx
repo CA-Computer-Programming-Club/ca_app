@@ -1,5 +1,8 @@
-import { useEffect, useState, useLayoutEffect } from "react";
+import showAlert from "@/components/alert";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActionSheetIOS,
   Image,
@@ -7,21 +10,14 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
-  Button,
-  TouchableWithoutFeedback,
-  Keyboard,
+  View
 } from "react-native";
-import showAlert from "@/components/alert";
-import { useNavigationState } from "@react-navigation/native";
-import { useNavigation } from "@react-navigation/native";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { ThemedModal } from "@/components/themed-modal";
+import { ThemedText } from "@/components/themed-text";
 import { ThemedTextInput } from "@/components/themed-text-input";
+import { ThemedView } from "@/components/themed-view";
 import {
   Menu,
   MenuOption,

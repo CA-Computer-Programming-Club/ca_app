@@ -1,10 +1,10 @@
-import { View, StyleSheet, Image, ScrollView } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useLocalSearchParams, Stack } from "expo-router";
-import { useEffect, useState } from "react";
 import { SERVER_URL } from "@/config";
 import { useNavigationState } from "@react-navigation/native";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface Post {
   id: string | number;
@@ -14,6 +14,7 @@ interface Post {
   description: string;
   image_filename: string | null;
   created_at: string;
+  is_resolved: boolean;
 }
 
 export default function PostDetailScreen() {
@@ -62,6 +63,30 @@ export default function PostDetailScreen() {
       setLoading(false);
     }
   };
+
+  const markResolved = (id: string) => {
+  // TODO: Implement the API call to mark the post as resolved
+    fetch(`${SERVER_URL}/mark_resolved/${id}`, {
+    method: "POST",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to mark post as resolved: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(() => {
+      // Update the UI to reflect the resolved status
+      setPostData((prevData) => ({
+        ...prevData!,
+        is_resolved: true,
+      }));
+    })
+    .catch((error) => {
+      console.error("Error marking post as resolved:", error);
+    });
+}
+
 
   if (loading) {
     return (
@@ -156,6 +181,24 @@ export default function PostDetailScreen() {
             <ThemedText style={styles.metaText}>
               Posted: {new Date(postData.created_at).toLocaleString()}
             </ThemedText>
+
+            <TouchableOpacity
+                    // onPress={() => onChange("lost")}
+                    style={[
+                      { backgroundColor: "#27ae60" },
+                      { marginLeft: 10 },
+                      { right: 1},
+                      { width: 150  },
+                      { height: 80  },
+                      { alignItems: "flex-end"  },
+                      { alignSelf: "flex-end" },
+                      { padding: 10  },
+                      { borderRadius: 5  },
+                    ]}
+                  >
+                    MARK AS FOUND
+                  </TouchableOpacity>
+                  
           </View>
         </View>
       </ScrollView>

@@ -26,8 +26,8 @@ function getServerUrl() {
   const host = getDevServerHost();
 
   if (__DEV__) {
-    // return "https://cacpc.dev/server";
-    return `http://${host}:8000`;
+    return "https://cacpc.dev/server";
+    // return `http://${host}:8000`;
   } else {
     return "https://cacpc.dev/server";
   }

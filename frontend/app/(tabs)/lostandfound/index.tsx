@@ -9,8 +9,9 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
-  View
+  Pressable,
+  View,
+  Modal,
 } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -68,7 +69,7 @@ export function LostFoundToggle({ mode, onChange }: LostFoundToggleProps) {
 
   return (
     <View style={styles.toggleRow}>
-      <TouchableOpacity
+      <Pressable
         onPress={() => onChange("lost")}
         style={[
           styles.toggleButton,
@@ -84,9 +85,9 @@ export function LostFoundToggle({ mode, onChange }: LostFoundToggleProps) {
         >
           Lost
         </ThemedText>
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity
+      <Pressable
         onPress={() => onChange("found")}
         style={[
           styles.toggleButton,
@@ -101,7 +102,7 @@ export function LostFoundToggle({ mode, onChange }: LostFoundToggleProps) {
         >
           Found
         </ThemedText>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
@@ -150,16 +151,169 @@ function SearchBar({
         clearButtonMode={Platform.OS === "ios" ? "while-editing" : "never"}
       />
       {value.length > 0 && (
-        <TouchableOpacity
+        <Pressable
           onPress={() => onChangeText("")}
           style={styles.searchClearHitbox}
         >
           <IconSymbol name="xmark" size={16} color={placeholder} />
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );
 }
+
+function AndroidFloatingMenu({
+  visible,
+  onClose,
+  onSelectLost,
+  onSelectFound,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelectLost: () => void;
+  onSelectFound: () => void;
+}) {
+  const backgroundColor = useThemeColor(
+    { light: "#ffffff", dark: "#2c2c2e" },
+    "background",
+  );
+  const textColor = useThemeColor(
+    { light: "#111827", dark: "#ffffff" },
+    "text",
+  );
+  const separatorColor = useThemeColor(
+    { light: "rgba(0,0,0,0.1)", dark: "rgba(255,255,255,0.1)" },
+    "text",
+  );
+  const lostColor = useThemeColor(
+    { light: "#c0392b", dark: "#e94f3f" },
+    "text",
+  );
+  const foundColor = useThemeColor(
+    { light: "#27ae60", dark: "#27ae60" },
+    "text",
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      {/* Full-screen overlay, aligned so children can sit bottom-right */}
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "flex-end",
+            alignItems: "flex-end",
+          },
+        ]}
+      >
+        {/* Click-outside area: fills everything except menu region */}
+        <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+
+        {/* Menu: same positioning as before (bottom: 100, right: 20) */}
+        <View
+          style={[
+            styles.androidMenu,
+            {
+              backgroundColor,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 16,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          <Pressable
+            style={styles.androidMenuItem}
+            onPress={() => {
+              onSelectLost();
+              onClose();
+            }}
+          >
+            <View style={styles.menuItemContent}>
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${lostColor}15` },
+                ]}
+              >
+                <IconSymbol
+                  name="magnifyingglass"
+                  size={18}
+                  color={lostColor}
+                />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <ThemedText style={[styles.menuTitle, { color: textColor }]}>
+                  Lost Item
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    styles.menuDescription,
+                    { color: textColor, opacity: 0.6 },
+                  ]}
+                >
+                  Report something you lost
+                </ThemedText>
+              </View>
+            </View>
+          </Pressable>
+
+          <View
+            style={[styles.menuSeparator, { backgroundColor: separatorColor }]}
+          />
+
+          <Pressable
+            style={styles.androidMenuItem}
+            onPress={() => {
+              onSelectFound();
+              onClose();
+            }}
+          >
+            <View style={styles.menuItemContent}>
+              <View
+                style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${foundColor}15` },
+                ]}
+              >
+                <IconSymbol name="shippingbox" size={18} color={foundColor} />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <ThemedText style={[styles.menuTitle, { color: textColor }]}>
+                  Found Item
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    styles.menuDescription,
+                    { color: textColor, opacity: 0.6 },
+                  ]}
+                >
+                  Report something you found
+                </ThemedText>
+              </View>
+            </View>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const PlusButton = ({ onPress }: { onPress: () => void }) => {
+  return (
+    <Pressable style={styles.circularButton} onPress={onPress}>
+      <ThemedText style={styles.plusSign}>+</ThemedText>
+    </Pressable>
+  );
+};
 
 export default function TabTwoScreen() {
   const [showMenu, setShowMenu] = useState(false);
@@ -190,13 +344,9 @@ export default function TabTwoScreen() {
           },
         },
         headerRight: () => (
-          <TouchableOpacity
-            onPress={handleMenuTrigger}
-            activeOpacity={0.7}
-            style={styles.headerPlus}
-          >
+          <Pressable onPress={handleMenuTrigger} style={styles.headerPlus}>
             <ThemedText style={styles.headerPlusText}>+</ThemedText>
-          </TouchableOpacity>
+          </Pressable>
         ),
       });
     }
@@ -402,12 +552,6 @@ export default function TabTwoScreen() {
     else setShowMenu(true);
   };
 
-  const PlusButton = ({ onPress }: { onPress: any }) => (
-    <TouchableOpacity style={styles.circularButton} onPress={onPress}>
-      <ThemedText style={styles.plusSign}>+</ThemedText>
-    </TouchableOpacity>
-  );
-
   const renderPost = (item: Item) => (
     <ThemedView
       key={item.id}
@@ -415,7 +559,7 @@ export default function TabTwoScreen() {
       lightColor="#fff"
       darkColor="#2c2c2e"
     >
-      <TouchableOpacity
+      <Pressable
         onPress={() =>
           router.push({
             pathname: "/lostandfound/postdetail",
@@ -453,7 +597,7 @@ export default function TabTwoScreen() {
             style={styles.image}
           />
         )}
-      </TouchableOpacity>
+      </Pressable>
     </ThemedView>
   );
 
@@ -589,70 +733,53 @@ export default function TabTwoScreen() {
                 source={{ uri: selectedImage }}
                 style={styles.imagePreview}
               />
-              <TouchableOpacity
+              <Pressable
                 style={styles.changeImageButton}
                 onPress={showImagePickerOptions}
               >
                 <ThemedText style={styles.changeImageText}>
                   Change Image
                 </ThemedText>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           ) : (
-            <TouchableOpacity
+            <Pressable
               style={styles.addImageButton}
               onPress={showImagePickerOptions}
             >
               <ThemedText style={styles.addImageText}>+ Add Image</ThemedText>
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
 
         <View style={styles.modalButtons}>
-          <TouchableOpacity
+          <Pressable
             style={[styles.button, styles.cancelButton]}
             onPress={() => setModalVisible(false)}
           >
             <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             style={[styles.button, styles.submitButton]}
             onPress={submitItem}
           >
             <ThemedText style={styles.submitButtonText}>Add Item</ThemedText>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </ThemedModal>
 
       {Platform.OS !== "ios" && (
-        <View style={styles.floatingButtonContainer}>
-          <Menu opened={showMenu} onBackdropPress={() => setShowMenu(false)}>
-            <MenuTrigger
-              onPress={handleMenuTrigger}
-              customStyles={{
-                triggerWrapper: styles.circularButton,
-                triggerText: styles.plusSign,
-              }}
-              text="+"
-            />
-            <MenuOptions>
-              <MenuOption
-                onSelect={() => {
-                  openAddModal("lost");
-                  setShowMenu(false);
-                }}
-                text="Lost Item"
-              />
-              <MenuOption
-                onSelect={() => {
-                  openAddModal("found");
-                  setShowMenu(false);
-                }}
-                text="Found Item"
-              />
-            </MenuOptions>
-          </Menu>
-        </View>
+        <>
+          <View style={styles.floatingButtonContainer}>
+            <PlusButton onPress={handleMenuTrigger} />
+          </View>
+          <AndroidFloatingMenu
+            visible={showMenu}
+            onClose={() => setShowMenu(false)}
+            onSelectLost={() => openAddModal("lost")}
+            onSelectFound={() => openAddModal("found")}
+          />
+        </>
       )}
     </View>
   );
@@ -671,6 +798,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+    borderWidth: 0,
     backgroundColor: "purple",
     alignItems: "center",
     justifyContent: "center",
@@ -679,6 +807,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    overflow: "hidden",
   },
   plusSign: {
     color: "white",
@@ -857,15 +986,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 44,
   },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
   searchInput: {
     flex: 1,
     paddingVertical: 0,
     fontSize: 15,
-    borderWidth: 0, // RN
+    borderWidth: 0,
     backgroundColor: "transparent",
     outlineStyle: "none",
     outlineWidth: 0,
@@ -888,7 +1013,6 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: "purple",
-    // backgroundColor: "#13694E",
 
     alignItems: "center",
     justifyContent: "center",
@@ -898,5 +1022,44 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     lineHeight: 22,
+  },
+  androidMenu: {
+    position: "absolute",
+    bottom: 100,
+    right: 20,
+    width: 260,
+    borderRadius: 12,
+    zIndex: 999,
+  },
+  androidMenuItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  menuItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  menuDescription: {
+    fontSize: 13,
+  },
+  menuSeparator: {
+    height: 1,
+    marginHorizontal: 16,
   },
 });

@@ -26,6 +26,7 @@ const MAPPING = {
   house: "home",
   "person.fill": "person",
   magnifyingglass: "search",
+  shippingbox: "inventory",
   xmark: "close",
 } as IconMapping;
 

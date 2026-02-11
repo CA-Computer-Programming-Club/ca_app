@@ -1,10 +1,11 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { SERVER_URL } from "@/config";
-import { useNavigationState } from "@react-navigation/native";
 import { Stack, useLocalSearchParams } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Pressable, View } from "react-native";
 
 interface Post {
   id: string | number;
@@ -18,11 +19,7 @@ interface Post {
 }
 
 export default function PostDetailScreen() {
-  const state = useNavigationState((s) => s);
-  console.log(
-    "STACK:",
-    state.routes.map((r) => r.name),
-  );
+  const colorScheme = useColorScheme();
   const { post } = useLocalSearchParams();
   const [postData, setPostData] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +35,7 @@ export default function PostDetailScreen() {
       setError(null);
 
       // First, try to get the specific post from all items
+      // TODO Fetch by ID directly from the backend instead of fetching all items and filtering on the client side
       const response = await fetch(`${SERVER_URL}/get_all_items`);
 
       if (!response.ok) {
@@ -65,28 +63,29 @@ export default function PostDetailScreen() {
   };
 
   const markResolved = (id: string) => {
-  // TODO: Implement the API call to mark the post as resolved
+    // TODO: Implement the API call to mark the post as resolved
     fetch(`${SERVER_URL}/mark_resolved/${id}`, {
-    method: "POST",
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Failed to mark post as resolved: ${response.status}`);
-      }
-      return response.json();
+      method: "POST",
     })
-    .then(() => {
-      // Update the UI to reflect the resolved status
-      setPostData((prevData) => ({
-        ...prevData!,
-        is_resolved: true,
-      }));
-    })
-    .catch((error) => {
-      console.error("Error marking post as resolved:", error);
-    });
-}
-
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to mark post as resolved: ${response.status}`,
+          );
+        }
+        return response.json();
+      })
+      .then(() => {
+        // Update the UI to reflect the resolved status
+        setPostData((prevData) => ({
+          ...prevData!,
+          is_resolved: true,
+        }));
+      })
+      .catch((error) => {
+        console.error("Error marking post as resolved:", error);
+      });
+  };
 
   if (loading) {
     return (
@@ -131,77 +130,84 @@ export default function PostDetailScreen() {
         }}
       />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {postData.image_filename && (
-          <View style={styles.imageContainer}>
-            <Image
-              source={{
-                uri: `${SERVER_URL}/uploads/${postData.image_filename}`,
-              }}
-              style={styles.image}
-              resizeMode="contain"
-            />
+      {/* Wrap ScrollView in a relative positioned container for the gradient */}
+      <View style={styles.scrollWrapper}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {postData.image_filename && (
+            <View style={styles.imageContainer}>
+              <Image
+                source={{
+                  uri: `${SERVER_URL}/uploads/${postData.image_filename}`,
+                }}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+
+          <View style={styles.contentContainer}>
+            <ThemedText type="title" style={styles.title}>
+              {postData.title}
+            </ThemedText>
+
+            <ThemedText
+              style={[
+                styles.type,
+                { color: postData.type === "lost" ? "#c0392b" : "#27ae60" },
+              ]}
+            >
+              {postData.type.toUpperCase()}
+            </ThemedText>
+
+            <ThemedText style={styles.location}>
+              {postData.type === "lost"
+                ? "Last Seen: 📍 " + postData.location
+                : "📍 " + postData.location}
+            </ThemedText>
+
+            <ThemedText style={styles.description}>
+              {postData.description}
+            </ThemedText>
           </View>
-        )}
+        </ScrollView>
 
-        <View style={styles.contentContainer}>
-          <ThemedText type="title" style={styles.title}>
-            {postData.title}
-          </ThemedText>
+        {/* Gradient overlay at the bottom of the scroll content */}
+        <LinearGradient
+          colors={
+            colorScheme === "dark"
+              ? ["transparent", "rgba(21,23,24,0.9)", "#151718"]
+              : ["transparent", "rgba(255,255,255,0.9)", "#fff"]
+          }
+          locations={[0, 0.5, 1]}
+          style={styles.gradientOverlay}
+          pointerEvents="none"
+        />
+      </View>
 
-          <ThemedText
-            style={[
-              styles.type,
-              { color: postData.type === "lost" ? "#c0392b" : "#27ae60" },
-            ]}
+      {/* Meta information at the bottom */}
+      <View style={styles.metaContainer}>
+        {/* Fixed button container above the meta section */}
+        <View style={styles.buttonContainer}>
+          <Pressable
+            onPress={() => postData.id && markResolved(postData.id.toString())}
+            style={styles.foundButton}
           >
-            {postData.type.toUpperCase()}
-          </ThemedText>
-
-          <ThemedText style={styles.location}>
-            {postData.type === "lost"
-              ? "Last Seen: 📍 " + postData.location
-              : "📍 " + postData.location}
-          </ThemedText>
-
-          <ThemedText style={styles.description}>
-            {postData.description}
-          </ThemedText>
-
-          <View style={styles.metaContainer}>
-            <ThemedText style={styles.metaText}>
-              Item ID: #{postData.id}
-            </ThemedText>
-            <ThemedText style={styles.metaText}>
-              Status: {postData.type === "lost" ? "Missing" : "Found"}
-            </ThemedText>
-            <ThemedText style={styles.metaText}>
-              Posted: {new Date(postData.created_at).toLocaleString()}
-            </ThemedText>
-
-            <TouchableOpacity
-                    // onPress={() => onChange("lost")}
-                    style={[
-                      { backgroundColor: "#27ae60" },
-                      { marginLeft: 10 },
-                      { right: 1},
-                      { width: 150  },
-                      { height: 80  },
-                      { alignItems: "flex-end"  },
-                      { alignSelf: "flex-end" },
-                      { padding: 10  },
-                      { borderRadius: 5  },
-                    ]}
-                  >
-                    MARK AS FOUND
-                  </TouchableOpacity>
-                  
-          </View>
+            <ThemedText style={styles.buttonText}>Mark as Resolved</ThemedText>
+          </Pressable>
         </View>
-      </ScrollView>
+
+        <ThemedText style={styles.metaText}>Item ID: #{postData.id}</ThemedText>
+        <ThemedText style={styles.metaText}>
+          Status: {postData.type === "lost" ? "Missing" : "Found"}
+        </ThemedText>
+        <ThemedText style={styles.metaText}>
+          Posted: {new Date(postData.created_at).toLocaleString()}
+        </ThemedText>
+      </View>
     </ThemedView>
   );
 }
@@ -210,11 +216,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollWrapper: {
+    flex: 1,
+    position: "relative",
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 30,
+  },
+  gradientOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 30, // Height of the gradient fade
   },
   imageContainer: {
     width: "100%",
@@ -223,11 +241,10 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    borderRadius: 8, // Added border radius here
+    borderRadius: 8,
   },
   contentContainer: {
     padding: 20,
-    flex: 1,
   },
   title: {
     fontSize: 28,
@@ -249,11 +266,27 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 24,
   },
+  buttonContainer: {
+    paddingBottom: 16,
+  },
+  foundButton: {
+    width: "100%",
+    paddingVertical: 12,
+    backgroundColor: "#13694E",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
   metaContainer: {
     borderTopWidth: 1,
     borderTopColor: "#ccc",
-    paddingTop: 16,
-    marginTop: "auto",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
   },
   metaText: {
     fontSize: 14,

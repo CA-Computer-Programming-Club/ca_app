@@ -3,7 +3,7 @@ import {
   Platform,
   StyleSheet,
   Image,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
 } from "react-native";
 
@@ -201,7 +201,7 @@ export default function LoginScreen() {
   };
 
   const GoogleSignInButton = ({ onPress, disabled }) => (
-    <TouchableOpacity
+    <Pressable
       style={[
         styles.googleButton,
         {
@@ -228,7 +228,7 @@ export default function LoginScreen() {
           Sign in with Google
         </ThemedText>
       </ThemedView>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   const ProfileView = ({ user, onLogout }) => (
@@ -256,9 +256,9 @@ export default function LoginScreen() {
       >
         {user.email}
       </ThemedText>
-      <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+      <Pressable style={styles.logoutButton} onPress={onLogout}>
         <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
-      </TouchableOpacity>
+      </Pressable>
     </ThemedView>
   );
 

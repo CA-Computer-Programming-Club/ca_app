@@ -19,12 +19,6 @@ import { ThemedModal } from "@/components/themed-modal";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedTextInput } from "@/components/themed-text-input";
 import { ThemedView } from "@/components/themed-view";
-import {
-  Menu,
-  MenuOption,
-  MenuOptions,
-  MenuTrigger,
-} from "react-native-popup-menu";
 import { MenuView } from "@react-native-menu/menu";
 
 import * as ImagePicker from "expo-image-picker";
@@ -348,6 +342,51 @@ const IOSAddMenu = ({
   );
 };
 
+const IOSImagePickerOptions = ({
+  onTakePhoto,
+  onChooseLibrary,
+  onChooseFile,
+  children,
+}: {
+  onTakePhoto: () => void;
+  onChooseLibrary: () => void;
+  onChooseFile: () => void;
+  children: React.ReactNode;
+}) => {
+  return (
+    <MenuView
+      onPressAction={({ nativeEvent }) => {
+        if (nativeEvent.event === "take_photo") onTakePhoto();
+        if (nativeEvent.event === "photo_library") onChooseLibrary();
+        if (nativeEvent.event === "choose_file") onChooseFile();
+      }}
+      actions={[
+        {
+          id: "choose_file",
+          title: "Choose File",
+          image: Platform.select({ ios: "folder" }),
+          imageColor: "#000",
+        },
+        {
+          id: "take_photo",
+          title: "Take Photo",
+          image: Platform.select({ ios: "camera" }),
+          imageColor: "#000",
+        },
+        {
+          id: "photo_library",
+          title: "Photo Library",
+          image: Platform.select({ ios: "photo.on.rectangle" }),
+          imageColor: "#000",
+        },
+      ]}
+      shouldOpenOnLongPress={false}
+    >
+      {children}
+    </MenuView>
+  );
+};
+
 const PlusButton = ({ onPress }: { onPress: () => void }) => {
   return (
     <Pressable style={styles.circularButton} onPress={onPress}>
@@ -372,6 +411,7 @@ export default function TabTwoScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [mode, setMode] = useState<Mode>("lost");
   const [searchQuery, setSearchQuery] = useState("");
+  const [imagePickerVisible, setImagePickerVisible] = useState(false);
 
   const navigation = useNavigation();
 
@@ -380,7 +420,8 @@ export default function TabTwoScreen() {
       navigation.setOptions({
         headerSearchBarOptions: {
           placeholder: "Search lost & found",
-          onChangeText: (event) => setSearchQuery(event.nativeEvent.text),
+          onChangeText: (event: { nativeEvent: { text: string } }) =>
+            setSearchQuery(event.nativeEvent.text),
         },
         headerRight: () => (
           <IOSAddMenu
@@ -483,26 +524,18 @@ export default function TabTwoScreen() {
     }
   };
 
+  const chooseFile = () => {
+    showAlert("Not Implemented", "File picker is not implemented yet.");
+  };
+
   const showImagePickerOptions = () => {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ["Cancel", "Take Photo", "Choose from Library"],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) takePhoto();
-          else if (buttonIndex === 2) pickImage();
-        },
-      );
-    } else if (Platform.OS === "web") {
+    if (Platform.OS === "web") {
       pickImage();
+    } else if (Platform.OS === "ios") {
+      // Nothing, since iOS already uses IOSImagePickerOptions (MenuView)
     } else {
-      showAlert("Select Image", "Choose an option", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Take Photo", onPress: takePhoto },
-        { text: "Choose from Library", onPress: pickImage },
-      ]);
+      // Android (and other non-web, non-iOS)
+      setImagePickerVisible(true);
     }
   };
 
@@ -577,19 +610,8 @@ export default function TabTwoScreen() {
     }
   };
 
-  const showActionSheet = () => {
-    ActionSheetIOS.showActionSheetWithOptions(
-      { options: ["Lost Item", "Found Item"] },
-      (buttonIndex) => {
-        if (buttonIndex === 0) openAddModal("lost");
-        else if (buttonIndex === 1) openAddModal("found");
-      },
-    );
-  };
-
   const handleMenuTrigger = () => {
-    if (Platform.OS === "ios") showActionSheet();
-    else setShowMenu(true);
+    setShowMenu(true);
   };
 
   const renderPost = (item: Item) => (
@@ -767,28 +789,62 @@ export default function TabTwoScreen() {
         {/* Image Selection */}
         <View style={styles.imageSection}>
           <ThemedText style={styles.imageLabel}>Image (Optional)</ThemedText>
+
           {selectedImage ? (
             <View style={styles.imagePreviewContainer}>
               <Image
                 source={{ uri: selectedImage }}
                 style={styles.imagePreview}
               />
-              <Pressable
-                style={styles.changeImageButton}
-                onPress={showImagePickerOptions}
-              >
-                <ThemedText style={styles.changeImageText}>
-                  Change Image
-                </ThemedText>
-              </Pressable>
+
+              {Platform.OS === "ios" ? (
+                <IOSImagePickerOptions
+                  onTakePhoto={takePhoto}
+                  onChooseLibrary={pickImage}
+                  onChooseFile={chooseFile}
+                >
+                  <Pressable style={styles.changeImageButton}>
+                    <ThemedText style={styles.changeImageText}>
+                      Change Image
+                    </ThemedText>
+                  </Pressable>
+                </IOSImagePickerOptions>
+              ) : (
+                <Pressable
+                  style={styles.changeImageButton}
+                  onPress={showImagePickerOptions}
+                >
+                  <ThemedText style={styles.changeImageText}>
+                    Change Image
+                  </ThemedText>
+                </Pressable>
+              )}
             </View>
           ) : (
-            <Pressable
-              style={styles.addImageButton}
-              onPress={showImagePickerOptions}
-            >
-              <ThemedText style={styles.addImageText}>+ Add Image</ThemedText>
-            </Pressable>
+            <>
+              {Platform.OS === "ios" ? (
+                <IOSImagePickerOptions
+                  onTakePhoto={takePhoto}
+                  onChooseLibrary={pickImage}
+                  onChooseFile={chooseFile}
+                >
+                  <Pressable style={styles.addImageButton}>
+                    <ThemedText style={styles.addImageText}>
+                      + Add Image
+                    </ThemedText>
+                  </Pressable>
+                </IOSImagePickerOptions>
+              ) : (
+                <Pressable
+                  style={styles.addImageButton}
+                  onPress={showImagePickerOptions}
+                >
+                  <ThemedText style={styles.addImageText}>
+                    + Add Image
+                  </ThemedText>
+                </Pressable>
+              )}
+            </>
           )}
         </View>
 
@@ -807,6 +863,108 @@ export default function TabTwoScreen() {
           </Pressable>
         </View>
       </ThemedModal>
+
+      {Platform.OS !== "ios" && (
+        <Modal
+          visible={imagePickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setImagePickerVisible(false)}
+        >
+          <View
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                backgroundColor: "rgba(0,0,0,0.5)",
+                justifyContent: "flex-end",
+                alignItems: "stretch",
+              },
+            ]}
+          >
+            <Pressable
+              style={StyleSheet.absoluteFillObject}
+              onPress={() => setImagePickerVisible(false)}
+            />
+
+            <View
+              style={{
+                backgroundColor: useThemeColor(
+                  { light: "#ffffff", dark: "#2c2c2e" },
+                  "background",
+                ),
+                paddingBottom: 20,
+                paddingTop: 8,
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+                borderTopWidth: StyleSheet.hairlineWidth,
+                borderColor: "rgba(255,255,255,0.1)",
+              }}
+            >
+              <ThemedText
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  textAlign: "center",
+                  marginVertical: 8,
+                }}
+              >
+                Select Image
+              </ThemedText>
+
+              <Pressable
+                style={{ paddingVertical: 8, paddingHorizontal: 20 }}
+                onPress={() => {
+                  chooseFile();
+                  setImagePickerVisible(false);
+                }}
+              >
+                <ThemedText style={{ fontSize: 15 }}>Choose File</ThemedText>
+              </Pressable>
+
+              <Pressable
+                style={{ paddingVertical: 8, paddingHorizontal: 20 }}
+                onPress={() => {
+                  takePhoto();
+                  setImagePickerVisible(false);
+                }}
+              >
+                <ThemedText style={{ fontSize: 15 }}>Take Photo</ThemedText>
+              </Pressable>
+
+              <Pressable
+                style={{ paddingVertical: 8, paddingHorizontal: 20 }}
+                onPress={() => {
+                  pickImage();
+                  setImagePickerVisible(false);
+                }}
+              >
+                <ThemedText style={{ fontSize: 15 }}>Photo Library</ThemedText>
+              </Pressable>
+
+              <Pressable
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 20,
+                  marginBottom: 8,
+                }}
+                onPress={() => setImagePickerVisible(false)}
+              >
+                <ThemedText
+                  style={{
+                    fontSize: 15,
+                    color: useThemeColor(
+                      { light: "#FF3B30", dark: "#FF453A" },
+                      "text",
+                    ),
+                  }}
+                >
+                  Cancel
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {Platform.OS !== "ios" && (
         <>
@@ -1002,21 +1160,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 0,
   },
-  toggleButtonActive: {
-    backgroundColor: "#13694E",
-  },
-  toggleButtonInactive: {
-    backgroundColor: "#e5e7eb",
-  },
   toggleText: {
     fontSize: 15,
     fontWeight: "600",
-  },
-  toggleTextActive: {
-    color: "#ffffff",
-  },
-  toggleTextInactive: {
-    color: "#374151",
   },
   searchContainer: {
     flexDirection: "row",
@@ -1032,21 +1178,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     borderWidth: 0,
     backgroundColor: "transparent",
-    outlineStyle: "none",
-    outlineWidth: 0,
-    boxShadow: "none",
-    borderColor: "transparent",
+    ...(Platform.select({
+      web: {
+        outlineStyle: "none",
+        outlineWidth: 0,
+        boxShadow: "none",
+        borderColor: "transparent",
+      },
+      default: {},
+    }) as any),
   },
   searchClearHitbox: {
     paddingLeft: 8,
     paddingVertical: 6,
     justifyContent: "center",
     alignItems: "center",
-  },
-  searchClear: {
-    fontSize: 16,
-    lineHeight: 16,
-    textAlignVertical: "center",
   },
   headerPlus: {
     width: 36,

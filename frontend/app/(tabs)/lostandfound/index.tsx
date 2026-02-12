@@ -25,6 +25,7 @@ import {
   MenuOptions,
   MenuTrigger,
 } from "react-native-popup-menu";
+import { MenuView } from "@react-native-menu/menu";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -201,7 +202,6 @@ function AndroidFloatingMenu({
       animationType="fade"
       onRequestClose={onClose}
     >
-      {/* Full-screen overlay, aligned so children can sit bottom-right */}
       <View
         style={[
           StyleSheet.absoluteFillObject,
@@ -212,10 +212,8 @@ function AndroidFloatingMenu({
           },
         ]}
       >
-        {/* Click-outside area: fills everything except menu region */}
         <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
 
-        {/* Menu: same positioning as before (bottom: 100, right: 20) */}
         <View
           style={[
             styles.androidMenu,
@@ -307,6 +305,49 @@ function AndroidFloatingMenu({
   );
 }
 
+const IOSAddMenu = ({
+  onSelectLost,
+  onSelectFound,
+}: {
+  onSelectLost: () => void;
+  onSelectFound: () => void;
+}) => {
+  return (
+    <MenuView
+      /* title="Report an item" */
+      onPressAction={({ nativeEvent }) => {
+        if (nativeEvent.event === "lost") onSelectLost();
+        if (nativeEvent.event === "found") onSelectFound();
+      }}
+      actions={[
+        {
+          id: "lost",
+          title: "Lost Item",
+          subtitle: "Report something you lost",
+          image: Platform.select({
+            ios: "magnifyingglass",
+          }),
+          imageColor: "#c0392b",
+        },
+        {
+          id: "found",
+          title: "Found Item",
+          subtitle: "Report something you found",
+          image: Platform.select({
+            ios: "shippingbox",
+          }),
+          imageColor: "#27ae60",
+        },
+      ]}
+      shouldOpenOnLongPress={false} // Open immediately on press
+    >
+      <Pressable style={styles.headerPlus}>
+        <ThemedText style={styles.headerPlusText}>+</ThemedText>
+      </Pressable>
+    </MenuView>
+  );
+};
+
 const PlusButton = ({ onPress }: { onPress: () => void }) => {
   return (
     <Pressable style={styles.circularButton} onPress={onPress}>
@@ -339,14 +380,13 @@ export default function TabTwoScreen() {
       navigation.setOptions({
         headerSearchBarOptions: {
           placeholder: "Search lost & found",
-          onChangeText: (event) => {
-            setSearchQuery(event.nativeEvent.text);
-          },
+          onChangeText: (event) => setSearchQuery(event.nativeEvent.text),
         },
         headerRight: () => (
-          <Pressable onPress={handleMenuTrigger} style={styles.headerPlus}>
-            <ThemedText style={styles.headerPlusText}>+</ThemedText>
-          </Pressable>
+          <IOSAddMenu
+            onSelectLost={() => openAddModal("lost")}
+            onSelectFound={() => openAddModal("found")}
+          />
         ),
       });
     }
@@ -1053,7 +1093,6 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 4,
   },
   menuDescription: {
     fontSize: 13,

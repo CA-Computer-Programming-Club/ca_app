@@ -130,7 +130,6 @@ export default function PostDetailScreen() {
         }}
       />
 
-      {/* Wrap ScrollView in a relative positioned container for the gradient */}
       <View style={styles.scrollWrapper}>
         <ScrollView
           style={styles.scrollView}
@@ -175,12 +174,11 @@ export default function PostDetailScreen() {
           </View>
         </ScrollView>
 
-        {/* Gradient overlay at the bottom of the scroll content */}
         <LinearGradient
           colors={
             colorScheme === "dark"
-              ? ["transparent", "rgba(21,23,24,0.9)", "#151718"]
-              : ["transparent", "rgba(255,255,255,0.9)", "#fff"]
+              ? ["rgba(21,23,24,0)", "rgba(21,23,24,0.9)", "#151718"]
+              : ["rgba(255,255,255,0)", "rgba(255,255,255,0.9)", "#fff"]
           }
           locations={[0, 0.5, 1]}
           style={styles.gradientOverlay}
@@ -188,9 +186,7 @@ export default function PostDetailScreen() {
         />
       </View>
 
-      {/* Meta information at the bottom */}
       <View style={styles.metaContainer}>
-        {/* Fixed button container above the meta section */}
         <View style={styles.buttonContainer}>
           <Pressable
             onPress={() => postData.id && markResolved(postData.id.toString())}
@@ -286,7 +282,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#ccc",
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 12,
+    paddingBottom: 10,
   },
   metaText: {
     fontSize: 14,

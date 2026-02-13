@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Pressable, View } from "react-native";
+import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import showAlert from "@/components/alert";
 
@@ -25,6 +26,7 @@ interface Post {
 
 export default function PostDetailScreen() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
   const { post } = useLocalSearchParams();
   const [postData, setPostData] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,9 +94,7 @@ export default function PostDetailScreen() {
         return response.json();
       })
       .then(() => {
-        setPostData((prevData) =>
-          prevData ? { ...prevData, is_resolved: true } : prevData,
-        );
+        router.back();
       })
       .catch((error) => {
         console.error("Error marking post as resolved:", error);

@@ -1,8 +1,8 @@
 import showAlert from "@/components/alert";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useNavigation } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useEffect, useCallback, useLayoutEffect, useState } from "react";
 import {
   Image,
   Modal,
@@ -418,6 +418,12 @@ export default function TabTwoScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setItems((prev) => prev.filter((item) => !item.is_resolved));
+    }, []),
+  );
 
   const navigation = useNavigation();
 

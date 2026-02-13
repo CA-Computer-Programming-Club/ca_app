@@ -12,6 +12,7 @@ import {
   StyleSheet,
   View
 } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedModal } from "@/components/themed-modal";
@@ -416,6 +417,7 @@ export default function TabTwoScreen() {
   const [mode, setMode] = useState<Mode>("lost");
   const [searchQuery, setSearchQuery] = useState("");
   const [imagePickerVisible, setImagePickerVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigation = useNavigation();
 
@@ -529,8 +531,29 @@ export default function TabTwoScreen() {
     }
   };
 
-  const chooseFile = () => {
-    showAlert("Not Implemented", "File picker is not implemented yet.");
+  const chooseFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+
+      // Preview
+      setSelectedImage(asset.uri);
+
+      // Web needs a real File object
+      if (Platform.OS === "web" && asset.file) {
+        setSelectedImageFile(asset.file);
+      }
+    } catch (err) {
+      console.error("Error choosing file:", err);
+      showAlert("Error", "Failed to choose file");
+    }
   };
 
   const showImagePickerOptions = () => {
@@ -552,18 +575,25 @@ export default function TabTwoScreen() {
   };
 
   const submitItem = async () => {
+    if (isSubmitting) return;
+
     if (!formData.title || !formData.description || !formData.location) {
       showAlert("Error", "Please fill in all fields.");
       return;
     }
 
+    setIsSubmitting(true);
+
+    setModalVisible(false);
+    await new Promise(requestAnimationFrame);
+
     try {
-      // Get current user from AsyncStorage
       const storedUser = await AsyncStorage.getItem("google_user_info");
       const user = storedUser ? JSON.parse(storedUser) : null;
 
       if (!user?.id) {
         showAlert("Error", "You must be signed in to add an item.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -591,35 +621,29 @@ export default function TabTwoScreen() {
       const endpoint =
         modalType === "lost" ? "add_lost_item" : "add_found_item";
 
-      console.log("Submitting to:", `${SERVER_URL}/${endpoint}`);
-
       const response = await fetch(`${SERVER_URL}/${endpoint}`, {
         method: "POST",
         body: formDataToSend,
       });
 
-      console.log("Response status:", response.status);
-
-      if (response.ok) {
-        const addedItem = await response.json();
-        setItems((prev) => [addedItem, ...prev]);
-        setModalVisible(false);
-        setFormData({ title: "", description: "", location: "" });
-        setSelectedImage(null);
-        showAlert(
-          "Success",
-          `Added ${modalType === "lost" ? "lost" : "Found"} item!`,
-        );
-      } else {
-        const errorText = await response.text();
-        console.error("Server response:", errorText);
-        throw new Error(
-          `Failed to add item: ${response.status} - ${errorText}`,
-        );
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text);
       }
-    } catch (error: any) {
-      console.error("Error adding item:", error);
-      showAlert("Error", `Failed to add item: ${error.message}`);
+
+      const addedItem = await response.json();
+      setItems((prev) => [addedItem, ...prev]);
+
+      showAlert(
+        "Success",
+        `Added ${modalType === "lost" ? "lost" : "found"} item!`,
+      );
+    } catch (err: any) {
+      showAlert("Error", err.message || "Failed to add item");
+    } finally {
+      setIsSubmitting(false);
+      setFormData({ title: "", description: "", location: "" });
+      setSelectedImage(null);
     }
   };
 
@@ -873,6 +897,7 @@ export default function TabTwoScreen() {
           <Pressable
             style={[styles.button, styles.submitButton]}
             onPress={submitItem}
+            disabled={isSubmitting}
           >
             <ThemedText style={styles.submitButtonText}>Add Item</ThemedText>
           </Pressable>

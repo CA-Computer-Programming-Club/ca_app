@@ -4,14 +4,13 @@ import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useEffect, useLayoutEffect, useState } from "react";
 import {
-  ActionSheetIOS,
   Image,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
-  Pressable,
-  View,
-  Modal,
+  View
 } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -19,8 +18,8 @@ import { ThemedModal } from "@/components/themed-modal";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedTextInput } from "@/components/themed-text-input";
 import { ThemedView } from "@/components/themed-view";
-import { MenuView } from "@react-native-menu/menu";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MenuView } from "@react-native-menu/menu";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -665,7 +664,9 @@ export default function TabTwoScreen() {
           lightColor="#333"
           darkColor="#ddd"
         >
-          {item.description}
+          {item.description.length > 150
+            ? item.description.slice(0, 150) + "..."
+            : item.description}
         </ThemedText>
         {item.image_filename && (
           <Image

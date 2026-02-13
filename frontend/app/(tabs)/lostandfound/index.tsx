@@ -10,7 +10,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  View
+  View,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 
@@ -421,7 +421,7 @@ export default function TabTwoScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setItems((prev) => prev.filter((item) => !item.is_resolved));
+      fetchItems();
     }, []),
   );
 

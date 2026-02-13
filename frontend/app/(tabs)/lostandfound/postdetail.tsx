@@ -110,7 +110,7 @@ export default function PostDetailScreen() {
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Yes",
+          text: "Confirm",
           style: "destructive",
           onPress: () => markResolved(postData.id),
         },
@@ -225,16 +225,14 @@ export default function PostDetailScreen() {
       <View style={[styles.metaContainer, isOwner && { paddingTop: 20 }]}>
         <View style={styles.buttonContainer}>
           {isOwner && (
-            <View style={styles.buttonContainer}>
-              <Pressable
-                onPress={confirmMarkResolved}
-                style={styles.foundButton}
-              >
-                <ThemedText style={styles.buttonText}>
-                  Mark as Resolved
-                </ThemedText>
-              </Pressable>
-            </View>
+            <Pressable
+              onPress={confirmMarkResolved}
+              style={styles.resolvedButton}
+            >
+              <ThemedText style={styles.buttonText}>
+                Mark as Resolved
+              </ThemedText>
+            </Pressable>
           )}
         </View>
 
@@ -310,7 +308,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingBottom: 16,
   },
-  foundButton: {
+  resolvedButton: {
     width: "100%",
     paddingVertical: 12,
     backgroundColor: "#13694E",

@@ -241,7 +241,7 @@ export default function PostDetailScreen() {
           User: {postData.user_name || "Unknown"}
         </ThemedText>
         <ThemedText style={styles.metaText}>
-          Status: {postData.type === "lost" ? "Missing" : "Found"}
+          Status: {postData.is_resolved ? "Resolved" : "Unresolved"}
         </ThemedText>
         <ThemedText style={styles.metaText}>
           Posted: {new Date(postData.created_at).toLocaleString()}

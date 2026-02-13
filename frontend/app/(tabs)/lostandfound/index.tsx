@@ -609,7 +609,7 @@ export default function TabTwoScreen() {
         setSelectedImage(null);
         showAlert(
           "Success",
-          `${modalType === "lost" ? "Lost" : "Found"} item added successfully!`,
+          `Added ${modalType === "lost" ? "lost" : "Found"} item!`,
         );
       } else {
         const errorText = await response.text();

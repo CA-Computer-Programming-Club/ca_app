@@ -227,9 +227,24 @@ export default function PostDetailScreen() {
           {isOwner && (
             <Pressable
               onPress={confirmMarkResolved}
-              style={styles.resolvedButton}
+              style={[
+                styles.resolvedButton,
+                {
+                  backgroundColor:
+                    colorScheme === "dark"
+                      ? "rgba(80, 200, 120, 0.18)"
+                      : "rgba(80, 200, 120, 0.25)",
+                },
+              ]}
             >
-              <ThemedText style={styles.buttonText}>
+              <ThemedText
+                style={[
+                  styles.buttonText,
+                  {
+                    color: colorScheme === "dark" ? "#7fd6ad" : "#2f8f68",
+                  },
+                ]}
+              >
                 Mark as Resolved
               </ThemedText>
             </Pressable>
@@ -311,13 +326,13 @@ const styles = StyleSheet.create({
   resolvedButton: {
     width: "100%",
     paddingVertical: 12,
-    backgroundColor: "#13694E",
+    // backgroundColor: "#13694E65",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
   },
   buttonText: {
-    color: "#fff",
+    // color: "#fff",
     fontWeight: "bold",
   },
   metaContainer: {

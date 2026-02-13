@@ -20,6 +20,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedTextInput } from "@/components/themed-text-input";
 import { ThemedView } from "@/components/themed-view";
 import { MenuView } from "@react-native-menu/menu";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -33,6 +34,10 @@ interface Item {
   description: string;
   image_filename: string | null;
   created_at: string;
+  updated_at: string;
+  user_id?: string;
+  user_name?: string;
+  is_resolved?: boolean;
 }
 
 type Mode = "lost" | "found";
@@ -448,7 +453,8 @@ export default function TabTwoScreen() {
     try {
       const response = await fetch(`${SERVER_URL}/get_all_items`);
       const data = await response.json();
-      setItems(data);
+      const unresolvedItems = data.filter((item: Item) => !item.is_resolved);
+      setItems(unresolvedItems);
     } catch (error) {
       console.error("Error fetching items:", error);
     }
@@ -553,18 +559,26 @@ export default function TabTwoScreen() {
     }
 
     try {
+      // Get current user from AsyncStorage
+      const storedUser = await AsyncStorage.getItem("google_user_info");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+
+      if (!user?.id) {
+        showAlert("Error", "You must be signed in to add an item.");
+        return;
+      }
+
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("location", formData.location);
+      formDataToSend.append("user_id", user.id);
+      formDataToSend.append("user_name", user.name);
 
       if (Platform.OS === "web" && selectedImageFile) {
         formDataToSend.append("image", selectedImageFile);
       } else if (selectedImage) {
-        // Extract filename from URI
         const filename = selectedImage.split("/").pop() || "photo.jpg";
-
-        // Get file extension and determine MIME type
         const match = /\.(\w+)$/.exec(filename);
         const mimeType = match ? `image/${match[1]}` : "image/jpeg";
 

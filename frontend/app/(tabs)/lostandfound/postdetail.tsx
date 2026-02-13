@@ -6,6 +6,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Pressable, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import showAlert from "@/components/alert";
 
 interface Post {
   id: string | number;
@@ -15,7 +17,10 @@ interface Post {
   description: string;
   image_filename: string | null;
   created_at: string;
+  updated_at: string;
   is_resolved: boolean;
+  user_id?: string;
+  user_name?: string;
 }
 
 export default function PostDetailScreen() {
@@ -24,10 +29,21 @@ export default function PostDetailScreen() {
   const [postData, setPostData] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPostDetail();
   }, [post]);
+
+  // Load current user info from AsyncStorage on component mount
+  useEffect(() => {
+    const loadUser = async () => {
+      const stored = await AsyncStorage.getItem("google_user_info");
+      const user = stored ? JSON.parse(stored) : null;
+      setCurrentUserId(user?.id ?? null);
+    };
+    loadUser();
+  }, []);
 
   const fetchPostDetail = async () => {
     try {
@@ -54,10 +70,18 @@ export default function PostDetailScreen() {
     }
   };
 
-  const markResolved = (id: string) => {
-    // TODO: Implement the API call to mark the post as resolved
+  const markResolved = (id: string | number) => {
+    if (!currentUserId) {
+      console.warn("No current user; cannot mark resolved");
+      return;
+    }
+
     fetch(`${SERVER_URL}/mark_resolved/${id}`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: currentUserId }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -68,15 +92,30 @@ export default function PostDetailScreen() {
         return response.json();
       })
       .then(() => {
-        // Update the UI to reflect the resolved status
-        setPostData((prevData) => ({
-          ...prevData!,
-          is_resolved: true,
-        }));
+        setPostData((prevData) =>
+          prevData ? { ...prevData, is_resolved: true } : prevData,
+        );
       })
       .catch((error) => {
         console.error("Error marking post as resolved:", error);
       });
+  };
+
+  const confirmMarkResolved = () => {
+    if (!postData) return;
+
+    showAlert(
+      "Mark as Resolved",
+      "Are you sure you want to mark this item as resolved?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: () => markResolved(postData.id),
+        },
+      ],
+    );
   };
 
   if (loading) {
@@ -112,6 +151,11 @@ export default function PostDetailScreen() {
       </ThemedView>
     );
   }
+
+  const isOwner =
+    !!currentUserId &&
+    postData.user_id === currentUserId &&
+    !postData.is_resolved;
 
   return (
     <ThemedView style={styles.container}>
@@ -178,17 +222,26 @@ export default function PostDetailScreen() {
         />
       </View>
 
-      <View style={styles.metaContainer}>
+      <View style={[styles.metaContainer, isOwner && { paddingTop: 20 }]}>
         <View style={styles.buttonContainer}>
-          <Pressable
-            onPress={() => postData.id && markResolved(postData.id.toString())}
-            style={styles.foundButton}
-          >
-            <ThemedText style={styles.buttonText}>Mark as Resolved</ThemedText>
-          </Pressable>
+          {isOwner && (
+            <View style={styles.buttonContainer}>
+              <Pressable
+                onPress={confirmMarkResolved}
+                style={styles.foundButton}
+              >
+                <ThemedText style={styles.buttonText}>
+                  Mark as Resolved
+                </ThemedText>
+              </Pressable>
+            </View>
+          )}
         </View>
 
         <ThemedText style={styles.metaText}>Item ID: #{postData.id}</ThemedText>
+        <ThemedText style={styles.metaText}>
+          User: {postData.user_name || "Unknown"}
+        </ThemedText>
         <ThemedText style={styles.metaText}>
           Status: {postData.type === "lost" ? "Missing" : "Found"}
         </ThemedText>
@@ -273,7 +326,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#ccc",
     paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: 10,
   },
   metaText: {

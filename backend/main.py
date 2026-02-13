@@ -1,5 +1,5 @@
 from typing import Union, List
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -35,7 +35,10 @@ def init_db():
             description TEXT,
             image_filename TEXT,
             created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
+            updated_at TEXT NOT NULL,
+            user_id TEXT,
+            user_name TEXT,
+            is_resolved INTEGER DEFAULT 0
         )
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON items(type)")
@@ -84,8 +87,11 @@ class ItemResponse(BaseModel):
     title: str
     location: str
     description: str
-    image_filename: str = None
+    image_filename: str | None = None
     created_at: str
+    updated_at: str
+    user_id: str | None = None
+    user_name: str | None = None
 
 
 def save_uploaded_file(file: UploadFile) -> str:
@@ -109,9 +115,13 @@ async def add_lost_item(
     title: str = Form(...),
     location: str = Form(...),
     description: str = Form(...),
+    user_id: str = Form(...),
+    user_name: str = Form(...),
     image: UploadFile = File(None),
 ):
-    return await add_item_to_db("lost", title, location, description, image)
+    return await add_item_to_db(
+        "lost", title, location, description, user_id, user_name, image
+    )
 
 
 @app.post("/add_found_item")
@@ -119,9 +129,13 @@ async def add_found_item(
     title: str = Form(...),
     location: str = Form(...),
     description: str = Form(...),
+    user_id: str = Form(...),
+    user_name: str = Form(...),
     image: UploadFile = File(None),
 ):
-    return await add_item_to_db("found", title, location, description, image)
+    return await add_item_to_db(
+        "found", title, location, description, user_id, user_name, image
+    )
 
 
 # TODO UPDATE ITEMS
@@ -142,6 +156,8 @@ async def add_item_to_db(
     title: str,
     location: str,
     description: str,
+    user_id: str,
+    user_name: str,
     image: UploadFile = None,
 ):
     conn = get_db_connection()
@@ -159,9 +175,9 @@ async def add_item_to_db(
             """
             INSERT INTO items (
                 type, title, location, description,
-                image_filename, created_at, updated_at
+                image_filename, created_at, updated_at, user_id, user_name
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item_type,
@@ -171,6 +187,8 @@ async def add_item_to_db(
                 image_filename,
                 created_at,
                 updated_at,
+                user_id,
+                user_name,
             ),
         )
 
@@ -237,3 +255,38 @@ def get_item(item_id: int):
     except Exception as e:
         conn.close()
         raise HTTPException(status_code=500, detail=f"Error fetching item: {str(e)}")
+
+
+@app.post("/mark_resolved/{item_id}")
+def mark_resolved(
+    item_id: int,
+    user_id: str = Body(..., embed=True),
+):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        item = cursor.execute("SELECT * FROM items WHERE id = ?", (item_id,)).fetchone()
+
+        if not item:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        if item["user_id"] != user_id:
+            conn.close()
+            raise HTTPException(status_code=403, detail="Not allowed")
+
+        cursor.execute(
+            """
+            UPDATE items
+            SET is_resolved = 1,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (utc_now_iso(), item_id),
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "ok"}
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Error marking resolved: {str(e)}")

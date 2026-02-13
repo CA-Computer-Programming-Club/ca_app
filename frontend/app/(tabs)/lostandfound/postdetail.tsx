@@ -34,20 +34,12 @@ export default function PostDetailScreen() {
       setLoading(true);
       setError(null);
 
-      // First, try to get the specific post from all items
-      // TODO Fetch by ID directly from the backend instead of fetching all items and filtering on the client side
-      const response = await fetch(`${SERVER_URL}/get_all_items`);
-
+      const response = await fetch(`${SERVER_URL}/get_item/${post}`);
       if (!response.ok) {
-        throw new Error(`Failed to fetch items: ${response.status}`);
+        throw new Error(`Failed to fetch post: ${response.status}`);
       }
 
-      const allItems: Post[] = await response.json();
-
-      // Find the specific post by ID
-      const foundPost = allItems.find(
-        (item) => item.id.toString() === (post as string),
-      );
+      const foundPost: Post = await response.json();
 
       if (foundPost) {
         setPostData(foundPost);

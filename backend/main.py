@@ -26,8 +26,7 @@ def get_db_connection():
 
 def init_db():
     conn = get_db_connection()
-    conn.execute(
-        """
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT CHECK (type IN ('lost', 'found')) NOT NULL,
@@ -38,8 +37,7 @@ def init_db():
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         )
-    """
-    )
+    """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_type ON items(type)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_location ON items(location)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_created_at ON items(created_at)")
@@ -224,3 +222,18 @@ def get_all_items():
     except Exception as e:
         conn.close()
         raise HTTPException(status_code=500, detail=f"Error fetching items: {str(e)}")
+
+
+@app.get("/get_item/{item_id}")
+def get_item(item_id: int):
+    conn = get_db_connection()
+    try:
+        item = conn.execute("SELECT * FROM items WHERE id = ?", (item_id,)).fetchone()
+        conn.close()
+        if item:
+            return dict(item)
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Error fetching item: {str(e)}")

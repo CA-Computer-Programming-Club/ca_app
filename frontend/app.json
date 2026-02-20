@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "CA App",
-    "slug": "ca_app",
+    "name": "Chameleon Connect",
+    "slug": "chameleon_connect",
     "version": "0.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
-      "caapp",
+      "chameleonconnect",
       "com.googleusercontent.apps.131708705239-35r4k29vfeo87obi7cjsftdk9alsfs5f"
     ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.concordacademy.caapp",
+      "bundleIdentifier": "com.concordacademy.chameleonconnect",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleURLTypes": [
@@ -35,7 +35,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.concordacademy.caapp"
+      "package": "com.concordacademy.chameleonconnect"
     },
     "web": {
       "output": "static",
@@ -65,8 +65,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4b480771-ed7c-4e66-bead-616ad5aadae7"
+        "projectId": "fe6b9e2d-f468-425b-801d-242130acd91c"
       }
-    }
+    },
+    "owner": "rehpotsirhc"
   }
 }

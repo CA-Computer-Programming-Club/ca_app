@@ -150,7 +150,7 @@ export default function PostDetailScreen() {
         subject: `Regarding your ${postData.type} item: "${postData.title}"`,
         body:
           `Hi ${postData.user_name || "there"},\n\n` +
-          `I'm contacting you about your ${postData.type} item posted on the CA app.\n\n` +
+          `I'm contacting you about your ${postData.type} item posted on Chameleon Connect.\n\n` +
           `Item title: ${postData.title}\n` +
           `Message:\n`,
       });

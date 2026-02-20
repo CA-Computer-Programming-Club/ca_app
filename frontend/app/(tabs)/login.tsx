@@ -279,7 +279,7 @@ export default function LoginScreen() {
       ) : (
         <ThemedView style={styles.loginContainer}>
           <ThemedText type="title" style={styles.title}>
-            Welcome to the CA App!
+            Welcome to Chameleon Connect!
           </ThemedText>
           <ThemedText
             lightColor="#666"

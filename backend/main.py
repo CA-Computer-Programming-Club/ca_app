@@ -38,6 +38,7 @@ def init_db():
             updated_at TEXT NOT NULL,
             user_id TEXT,
             user_name TEXT,
+            user_email TEXT,
             is_resolved INTEGER DEFAULT 0
         )
     """)
@@ -117,10 +118,11 @@ async def add_lost_item(
     description: str = Form(...),
     user_id: str = Form(...),
     user_name: str = Form(...),
+    user_email: str = Form(...),
     image: UploadFile = File(None),
 ):
     return await add_item_to_db(
-        "lost", title, location, description, user_id, user_name, image
+        "lost", title, location, description, user_id, user_name, user_email, image
     )
 
 
@@ -131,10 +133,11 @@ async def add_found_item(
     description: str = Form(...),
     user_id: str = Form(...),
     user_name: str = Form(...),
+    user_email: str = Form(...),
     image: UploadFile = File(None),
 ):
     return await add_item_to_db(
-        "found", title, location, description, user_id, user_name, image
+        "found", title, location, description, user_id, user_name, user_email, image
     )
 
 
@@ -158,6 +161,7 @@ async def add_item_to_db(
     description: str,
     user_id: str,
     user_name: str,
+    user_email: str,
     image: UploadFile = None,
 ):
     conn = get_db_connection()
@@ -175,9 +179,9 @@ async def add_item_to_db(
             """
             INSERT INTO items (
                 type, title, location, description,
-                image_filename, created_at, updated_at, user_id, user_name
+                image_filename, created_at, updated_at, user_id, user_name, user_email
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item_type,
@@ -189,6 +193,7 @@ async def add_item_to_db(
                 updated_at,
                 user_id,
                 user_name,
+                user_email,
             ),
         )
 

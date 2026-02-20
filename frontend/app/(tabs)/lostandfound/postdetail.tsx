@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as MailComposer from "expo-mail-composer";
 import showAlert from "@/components/alert";
 
 interface Post {
@@ -22,6 +23,7 @@ interface Post {
   is_resolved: boolean;
   user_id?: string;
   user_name?: string;
+  user_email?: string;
 }
 
 export default function PostDetailScreen() {
@@ -116,6 +118,48 @@ export default function PostDetailScreen() {
         },
       ],
     );
+  };
+
+  const contactPoster = async () => {
+    if (!postData) return;
+
+    const posterEmail = postData.user_email;
+
+    if (!posterEmail) {
+      showAlert(
+        "Contact Unavailable",
+        "This post does not have an email associated with it.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    try {
+      const isAvailable = await MailComposer.isAvailableAsync();
+      if (!isAvailable) {
+        showAlert(
+          "Email Not Available",
+          "No email app is configured on this device.",
+          [{ text: "OK" }],
+        );
+        return;
+      }
+
+      await MailComposer.composeAsync({
+        recipients: [posterEmail],
+        subject: `Regarding your ${postData.type} item: "${postData.title}"`,
+        body:
+          `Hi ${postData.user_name || "there"},\n\n` +
+          `I'm contacting you about your ${postData.type} item posted on the CA app.\n\n` +
+          `Item title: ${postData.title}\n` +
+          `Message:\n`,
+      });
+    } catch (err) {
+      console.error("Error composing email:", err);
+      showAlert("Error", "There was a problem opening the email composer.", [
+        { text: "OK" },
+      ]);
+    }
   };
 
   if (loading) {
@@ -222,13 +266,13 @@ export default function PostDetailScreen() {
         />
       </View>
 
-      <View style={[styles.metaContainer, isOwner && { paddingTop: 20 }]}>
+      <View style={[styles.metaContainer]}>
         <View style={styles.buttonContainer}>
-          {isOwner && (
+          {isOwner ? (
             <Pressable
               onPress={confirmMarkResolved}
               style={[
-                styles.resolvedButton,
+                styles.actionButton,
                 {
                   backgroundColor:
                     colorScheme === "dark"
@@ -246,6 +290,30 @@ export default function PostDetailScreen() {
                 ]}
               >
                 Mark as Resolved
+              </ThemedText>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={contactPoster}
+              style={[
+                styles.actionButton,
+                {
+                  backgroundColor:
+                    colorScheme === "dark"
+                      ? "rgba(80, 200, 120, 0.18)"
+                      : "rgba(80, 200, 120, 0.25)",
+                },
+              ]}
+            >
+              <ThemedText
+                style={[
+                  styles.buttonText,
+                  {
+                    color: colorScheme === "dark" ? "#7fd6ad" : "#2f8f68",
+                  },
+                ]}
+              >
+                Contact Poster
               </ThemedText>
             </Pressable>
           )}
@@ -323,7 +391,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingBottom: 16,
   },
-  resolvedButton: {
+  actionButton: {
     width: "100%",
     paddingVertical: 12,
     // backgroundColor: "#13694E65",
@@ -340,6 +408,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#ccc",
     paddingHorizontal: 20,
     paddingBottom: 10,
+    paddingTop: 20,
   },
   metaText: {
     fontSize: 14,

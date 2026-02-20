@@ -37,6 +37,7 @@ interface Item {
   updated_at: string;
   user_id?: string;
   user_name?: string;
+  user_email?: string;
   is_resolved?: boolean;
 }
 
@@ -609,6 +610,7 @@ export default function TabTwoScreen() {
       formDataToSend.append("location", formData.location);
       formDataToSend.append("user_id", user.id);
       formDataToSend.append("user_name", user.name);
+      formDataToSend.append("user_email", user.email);
 
       if (Platform.OS === "web" && selectedImageFile) {
         formDataToSend.append("image", selectedImageFile);
